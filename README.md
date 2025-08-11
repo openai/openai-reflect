@@ -5,45 +5,47 @@ ideas/inspirations during the project.
 
 <hr />
 
-<div style="display:flex;gap:20px;">
-  <div style="flex:1 1 50%;box-sizing:border-box;">
-    <img src="./.github/reflect.png" height="500px" alt="Reflect">
-  </div>
-  <div style="flex:1 1 50%;box-sizing:border-box;">
-    <b> Communicate naturally </b>
-    <ul>
-      <li>sound, light and color, avoid screens</li>
-    </ul>
-    <b> Phone is your key </b>
-    <ul>
-      <li>device has no state, all info is on phone</li>
-    </ul>
-    <b> Reflect on yesterday </b>
-    <ul>
-      <li>ask about events in your calendar</li>
-    </ul>
-    <b> Prepare for tomorrow </b>
-    <ul>
-      <li>you have a test tomorrow, want to study?</li>
-    </ul>
-    <b> Assistant to keep you in flow</b>
-    <ul>
-      <li>play music while studying, ask quick questions</li>
-    </ul>
-    <b>Location Aware</b>
-    <ul>
-      <li>unique behavior in kitchen/office...</li>
-    </ul>
-    <b>Designed to modify</b>
-    <ul>
-      <li>should be easy to modify/try new things</li>
-    </ul>
-    <b>Cheap</b>
-    <ul>
-      <li>make it available to as many as possible</li>
-    </ul>
-  </div>
-</div>
+<table>
+  <tr>
+    <td width="50%" valign="top">
+      <img src="./.github/reflect.png" height="500px" alt="Reflect">
+    </td>
+    <td width="50%" valign="top">
+      <b> Communicate naturally </b>
+      <ul>
+        <li>sound, light and color, avoid screens</li>
+      </ul>
+      <b> Phone is your key </b>
+      <ul>
+        <li>device has no state, all info is on phone</li>
+      </ul>
+      <b> Reflect on yesterday </b>
+      <ul>
+        <li>ask about events in your calendar</li>
+      </ul>
+      <b> Prepare for tomorrow </b>
+      <ul>
+        <li>you have a test tomorrow, want to study?</li>
+      </ul>
+      <b> Assistant to keep you in flow</b>
+      <ul>
+        <li>play music while studying, ask quick questions</li>
+      </ul>
+      <b>Location Aware</b>
+      <ul>
+        <li>unique behavior in kitchen/office...</li>
+      </ul>
+      <b>Designed to modify</b>
+      <ul>
+        <li>should be easy to modify/try new things</li>
+      </ul>
+      <b>Cheap</b>
+      <ul>
+        <li>make it available to as many as possible</li>
+      </ul>
+    </td>
+  </tr>
+</table>
 
 ### Supported Devices
 We hope to expand this list. Reflect was written for a specific device to start, but if it is useful we want to add more.
