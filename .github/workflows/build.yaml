@@ -1,0 +1,20 @@
+name: Build
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@v2
+      with:
+        submodules: 'recursive'
+
+    - name: Build
+      run: docker run -v $PWD:/project -w /project -u 0 -e HOME=/tmp espressif/idf:latest
+      shell: bash
