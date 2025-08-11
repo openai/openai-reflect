@@ -8,7 +8,7 @@ ideas/inspirations during the project.
 <table>
   <tr>
     <td width="50%" valign="top">
-      <img src="./.github/reflect.png" height="500px" alt="Reflect">
+      <img src="./.github/reflect.png" height="650px" alt="Reflect">
     </td>
     <td width="50%" valign="top">
       <b> Communicate naturally </b>
