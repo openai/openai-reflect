@@ -7,7 +7,7 @@ ideas/inspirations during the project.
 
 <div style="display:flex;gap:20px;">
   <div style="flex:1 1 50%;box-sizing:border-box;">
-    <img src="./.github/reflect.png" alt="Reflect">
+    <img src="./.github/reflect.png" height="500px" alt="Reflect">
   </div>
   <div style="flex:1 1 50%;box-sizing:border-box;">
     <b> Communicate naturally </b>
