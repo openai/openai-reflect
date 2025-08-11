@@ -8,6 +8,7 @@
 void reflect_display();
 void reflect_wifi();
 void reflect_http();
+void reflect_peer_connection_loop();
 
 extern "C" void app_main(void) {
   ESP_ERROR_CHECK(nvs_flash_init());
@@ -17,4 +18,5 @@ extern "C" void app_main(void) {
   reflect_display();
   reflect_wifi();
   reflect_http();
+  reflect_peer_connection_loop();
 }
