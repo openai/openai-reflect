@@ -148,7 +148,7 @@ static void spinner_set_angle(void *obj, int32_t v)
     lv_image_set_rotation((lv_obj_t *)obj, v);
 }
 
-void start_display(void)
+void reflect_display(void)
 {
     bsp_display_start();
     bsp_display_backlight_on();
