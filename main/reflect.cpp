@@ -6,6 +6,7 @@
 #define TAG "reflect"
 
 void reflect_display();
+void reflect_audio();
 void reflect_wifi();
 void reflect_http();
 void reflect_peer_connection_loop();
@@ -16,6 +17,7 @@ extern "C" void app_main(void) {
   ESP_ERROR_CHECK(esp_event_loop_create_default());
 
   reflect_display();
+  reflect_audio();
   reflect_wifi();
   reflect_http();
   reflect_peer_connection_loop();

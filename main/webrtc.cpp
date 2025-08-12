@@ -6,9 +6,11 @@
 #include <opus.h>
 #include <peer.h>
 
+#define TICK_INTERVAL 15
+void reflect_play_audio(uint8_t *, size_t);
+
 static SemaphoreHandle_t lock;
 PeerConnection *peer_connection = NULL;
-#define TICK_INTERVAL 15
 
 static void onicecandidate_task(char *description, void *user_data) {
   strcpy((char *)user_data, description);
@@ -20,7 +22,9 @@ void reflect_new_peer_connection(char *offer, char *answer) {
       .audio_codec = CODEC_OPUS,
       .video_codec = CODEC_NONE,
       .datachannel = DATA_CHANNEL_STRING,
-      .onaudiotrack = [](uint8_t *data, size_t size, void *userdata) -> void {},
+      .onaudiotrack = [](uint8_t *data, size_t size, void *userdata) -> void {
+        reflect_play_audio(data, size);
+      },
       .onvideotrack = NULL,
       .on_request_keyframe = NULL,
       .user_data = answer,
