@@ -1,63 +1,148 @@
 <html>
+
 <head>
-  <meta charset="UTF-8">
-  <title>Reflect</title>
-  <style>
-    body { font-family: sans-serif; padding: 1rem; }
-    #log { white-space: pre-wrap; border: 1px solid #ccc; padding: 1rem; height: 300px; overflow-y: scroll; }
-  </style>
+    <meta charset="UTF-8">
+    <title>Reflect</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            padding: 1rem;
+        }
+
+        #log {
+            white-space: pre-wrap;
+            border: 1px solid #ccc;
+            padding: 1rem;
+            height: 300px;
+            overflow-y: scroll;
+        }
+    </style>
 </head>
+
 <body>
-  <h1>Reflect</h1>
+    <h1>Reflect</h1>
 
-  <label>OpenAI API Key:
-    <input type="password" id="apiKey" placeholder="sk-..." size="42">
-  </label><br/>
-  </label><br/>
-  <button onclick='window.startReflect()'>Start Reflect</button>
+    <label>OpenAI API Key: <input type="password" id="apiKey" placeholder="sk-..." size="42"> </label><br />
+    <label>Model: <input type="text" id="model" value="gpt-4o-realtime-preview-2025-06-03"> </label><br />
 
-  <h2>Status</h2>
-  <div id="log"></div>
+    <button onclick='window.startReflect()'>Start Reflect</button>
 
-  <script>
-    window.startReflect = async () => {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-      const [audioTrack] = stream.getAudioTracks()
+    <h2>Status</h2>
+    <div id="log"></div>
 
-      const reflectPeerConnection = new RTCPeerConnection()
-      reflectPeerConnection.addTrack(audioTrack, stream)
-      reflectPeerConnection.createDataChannel('')
+    <h2>Audio Tracks</h2>
+    <div id="audio"></div>
 
-      const offer = await reflectPeerConnection.createOffer()
-      await reflectPeerConnection.setLocalDescription(offer)
+    <script>
+        document.getElementById('apiKey').value = localStorage.getItem('apiKey')
 
-      reflectPeerConnection.ontrack = (event) => {
-        console.log('audio from device')
-      };
+        const createAudioPlayer = (event) => {
+            const audioEl = document.createElement("audio")
+            audioEl.srcObject = event.streams[0]
+            audioEl.autoplay = true;
+            audioEl.controls = true;
+            audioEl.muted = true;
 
-      reflectPeerConnection.onicegatheringstatechange = async () => {
-        if (reflectPeerConnection.iceGatheringState === "complete") {
-          const offer = reflectPeerConnection.localDescription.sdp.split("\r\n").filter(line => {
-            if (!line.includes("a=candidate")) {
-              return true
+            document.getElementById('audio').appendChild(audioEl);
+        }
+
+        // libpeer doesn't update MIDs correctly.
+        // When this is fixed the following function can be removed
+        const libpeerConnect = async (reflectPeerConnection) => {
+            const offer = await reflectPeerConnection.createOffer()
+            await reflectPeerConnection.setLocalDescription(offer)
+            reflectPeerConnection.onicegatheringstatechange = async () => {
+                libpeerMunging(reflectPeerConnection)
             }
 
-            return line.includes("192.168.4") && line.includes("udp")
-          }).join("\r\n")
+            reflectPeerConnection.onicegatheringstatechange = async () => {
+                if (reflectPeerConnection.iceGatheringState !== "complete") {
+                    return
+                }
+                const offer = reflectPeerConnection.localDescription.sdp.split("\r\n").filter(line => {
+                    if (!line.includes("a=candidate")) {
+                        return true
+                    }
 
-          const res = await fetch("/connect", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: offer,
-          })
-          let answer = await res.text()
-          answer = answer.replace("BUNDLE audio datachannel", "BUNDLE 0 1")
-                         .replace("a=mid:audio", "a=mid:0")
-                         .replace("a=mid:datachannel", "a=mid:1")
-          await reflectPeerConnection.setRemoteDescription({type: 'answer', sdp: answer})
+                    return line.includes("192.168.4") && line.includes("udp")
+                }).join("\r\n")
+
+                const res = await fetch("/connect", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: offer,
+                })
+                let answer = await res.text()
+                answer = answer.replace("BUNDLE audio datachannel", "BUNDLE 0 1")
+                    .replace("a=mid:audio", "a=mid:0")
+                    .replace("a=mid:datachannel", "a=mid:1")
+                await reflectPeerConnection.setRemoteDescription({
+                    type: 'answer',
+                    sdp: answer
+                })
+            }
         }
-      }
-    }
-  </script>
+
+        const connectToRealtimeAPI = async (realtimePeerConnection) => {
+            const model = document.getElementById('model').value.trim()
+            const apiKey = document.getElementById('apiKey').value.trim()
+            localStorage.setItem('apiKey', apiKey)
+
+            const offer = await realtimePeerConnection.createOffer()
+            await realtimePeerConnection.setLocalDescription(offer);
+            const resp = await fetch(`https://api.openai.com/v1/realtime?model=${encodeURIComponent(model)}`, {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${apiKey}`,
+                    "Content-Type": "application/sdp"
+                },
+                body: offer.sdp
+            })
+
+            await realtimePeerConnection.setRemoteDescription({
+                type: "answer",
+                sdp: await resp.text()
+            })
+        }
+
+        window.startReflect = async () => {
+            const realtimePeerConnection = new RTCPeerConnection()
+            const realtimeTransceiver = realtimePeerConnection.addTransceiver('audio')
+            const realtimeDataChannel = realtimePeerConnection.createDataChannel('')
+
+            realtimeDataChannel.onopen = () => {
+                realtimeDataChannel.send(JSON.stringify({
+                    type: "session.update",
+                    session: {
+                        input_audio_noise_reduction: {
+                            type: "far_field"
+                        },
+                        turn_detection: {
+                            type: "semantic_vad"
+                        },
+                    }
+                }))
+            }
+
+            const reflectPeerConnection = new RTCPeerConnection()
+            const reflectTransceiver = reflectPeerConnection.addTransceiver('audio')
+            const reflectDataChannel = reflectPeerConnection.createDataChannel('')
+
+            reflectPeerConnection.ontrack = (event) => {
+                createAudioPlayer(event)
+                realtimeTransceiver.sender.replaceTrack(event.track);
+            };
+            realtimePeerConnection.ontrack = (event) => {
+                createAudioPlayer(event)
+                reflectTransceiver.sender.replaceTrack(event.track);
+            };
+
+            connectToRealtimeAPI(realtimePeerConnection)
+            libpeerConnect(reflectPeerConnection)
+        }
+    </script>
 </body>
+
 </html>

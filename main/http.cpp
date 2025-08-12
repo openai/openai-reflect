@@ -13,27 +13,13 @@ esp_err_t root_get_handler(httpd_req_t *req) {
 }
 
 static esp_err_t post_handler(httpd_req_t *req) {
-  int total_len = req->content_len;
-  int cur_len = 0;
-  int received = 0;
   auto offer = (char *)calloc(SDP_BUFFER_SIZE, sizeof(char));
   auto answer = (char *)calloc(SDP_BUFFER_SIZE, sizeof(char));
 
-  if (total_len >= SDP_BUFFER_SIZE) {
+  if (req->content_len != httpd_req_recv(req, offer, SDP_BUFFER_SIZE)) {
     httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR,
-                        "Content too long");
+                        "Failed to read POST");
     return ESP_FAIL;
-  }
-
-  while (cur_len < total_len) {
-    received = httpd_req_recv(req, offer + cur_len, total_len - cur_len);
-    if (received <= 0) {
-      if (received == HTTPD_SOCK_ERR_TIMEOUT) {
-        continue;
-      }
-      return ESP_FAIL;
-    }
-    cur_len += received;
   }
 
   reflect_new_peer_connection(offer, answer);
