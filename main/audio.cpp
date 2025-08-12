@@ -1,5 +1,7 @@
 #include "bsp/esp-bsp.h"
+
 #include <opus.h>
+#include <peer.h>
 
 #define CHANNELS 1
 #define SAMPLE_RATE (24000)
@@ -25,6 +27,10 @@ esp_codec_dev_handle_t spk_codec_dev;
 OpusDecoder *opus_decoder = NULL;
 opus_int16 *decoder_buffer = NULL;
 
+OpusEncoder *opus_encoder = NULL;
+uint8_t *encoder_output_buffer = NULL;
+uint8_t *read_buffer = NULL;
+
 void reflect_audio() {
   // Speaker
   spk_codec_dev = bsp_audio_codec_speaker_init();
@@ -38,11 +44,25 @@ void reflect_audio() {
   esp_codec_dev_open(mic_codec_dev, &fs);
 
   // Decoder
-  int decoder_error = 0;
-  opus_decoder = opus_decoder_create(SAMPLE_RATE, 1, &decoder_error);
-  assert(decoder_error == OPUS_OK);
-
+  int opus_error = 0;
+  opus_decoder = opus_decoder_create(SAMPLE_RATE, 1, &opus_error);
+  assert(opus_error == OPUS_OK);
   decoder_buffer = (opus_int16 *)malloc(PCM_BUFFER_SIZE);
+
+  // Encoder
+  opus_encoder =
+      opus_encoder_create(SAMPLE_RATE, 1, OPUS_APPLICATION_VOIP, &opus_error);
+  assert(opus_error == OPUS_OK);
+  assert(opus_encoder_init(opus_encoder, SAMPLE_RATE, 1,
+                           OPUS_APPLICATION_VOIP) == OPUS_OK);
+
+  opus_encoder_ctl(opus_encoder, OPUS_SET_BITRATE(OPUS_ENCODER_BITRATE));
+  opus_encoder_ctl(opus_encoder, OPUS_SET_COMPLEXITY(OPUS_ENCODER_COMPLEXITY));
+  opus_encoder_ctl(opus_encoder, OPUS_SET_SIGNAL(OPUS_SIGNAL_VOICE));
+
+  read_buffer =
+      (uint8_t *)heap_caps_malloc(PCM_BUFFER_SIZE, MALLOC_CAP_DEFAULT);
+  encoder_output_buffer = (uint8_t *)malloc(OPUS_BUFFER_SIZE);
 }
 
 void reflect_play_audio(uint8_t *data, size_t size) {
@@ -52,4 +72,13 @@ void reflect_play_audio(uint8_t *data, size_t size) {
   if (decoded_size > 0) {
     esp_codec_dev_write(spk_codec_dev, decoder_buffer, PCM_BUFFER_SIZE);
   }
+}
+
+void reflect_send_audio(PeerConnection *peer_connection) {
+  ESP_ERROR_CHECK(esp_codec_dev_read(mic_codec_dev, read_buffer, PCM_BUFFER_SIZE));
+
+  auto encoded_size = opus_encode(opus_encoder, (const opus_int16 *)read_buffer,
+                                  PCM_BUFFER_SIZE / sizeof(uint16_t),
+                                  encoder_output_buffer, OPUS_BUFFER_SIZE);
+  peer_connection_send_audio(peer_connection, encoder_output_buffer, encoded_size);
 }
