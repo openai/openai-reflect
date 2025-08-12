@@ -1,3 +1,4 @@
+#include "esp_timer.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"
 #include "freertos/task.h"
@@ -10,7 +11,6 @@
 void reflect_play_audio(uint8_t *, size_t);
 void reflect_send_audio(PeerConnection *);
 
-static SemaphoreHandle_t lock;
 PeerConnection *peer_connection = NULL;
 
 static void onicecandidate_task(char *description, void *user_data) {
@@ -21,8 +21,15 @@ StaticTask_t send_audio_task_buffer;
 void reflect_send_audio_task(void *user_data) {
   auto peer_connection = (PeerConnection *)user_data;
   while (1) {
+    int64_t start_us = esp_timer_get_time();
     reflect_send_audio(peer_connection);
-    vTaskDelay(pdMS_TO_TICKS(TICK_INTERVAL));
+
+    int64_t elapsed_us = esp_timer_get_time() - start_us;
+    int64_t ms_sleep = TICK_INTERVAL - (elapsed_us / 1000);
+
+    if (ms_sleep > 0) {
+      vTaskDelay(pdMS_TO_TICKS(ms_sleep));
+    }
   }
 }
 
@@ -40,14 +47,8 @@ void reflect_new_peer_connection(char *offer, char *answer) {
       .user_data = answer,
   };
 
-  assert(xSemaphoreTake(lock, pdMS_TO_TICKS(portMAX_DELAY)) == pdTRUE);
-  if (peer_connection != NULL) {
-    peer_connection_close(peer_connection);
-  }
-
   peer_connection = peer_connection_create(&peer_connection_config);
   assert(peer_connection != NULL);
-  xSemaphoreGive(lock);
 
   peer_connection_onicecandidate(peer_connection, onicecandidate_task);
   peer_connection_oniceconnectionstatechange(
@@ -69,16 +70,12 @@ void reflect_new_peer_connection(char *offer, char *answer) {
 
 void reflect_peer_connection_loop() {
   peer_init();
-  lock = xSemaphoreCreateMutex();
 
   while (1) {
-    if (xSemaphoreTake(lock, pdMS_TO_TICKS(100)) == pdTRUE) {
-      if (peer_connection != nullptr) {
-        peer_connection_loop(peer_connection);
-      }
-
-      xSemaphoreGive(lock);
+    if (peer_connection != nullptr) {
+      peer_connection_loop(peer_connection);
     }
-    vTaskDelay(pdMS_TO_TICKS(TICK_INTERVAL));
+
+    vTaskDelay(pdMS_TO_TICKS(1));
   }
 }

@@ -20,11 +20,6 @@ static constexpr char html_page[] = R"HTML(
   <label>OpenAI API Key:
     <input type="password" id="apiKey" placeholder="sk-..." size="42">
   </label><br/>
-  <label>Voice:
-    <input type="text" id="voice" value="alloy">
-  </label><br/>
-  <label>Gain&nbsp;(1-5):
-    <input type="number" min="1" max="5" step="1" value="3" id="gainInput">
   </label><br/>
   <button onclick='window.startReflect()'>Start Reflect</button>
 
@@ -40,8 +35,12 @@ static constexpr char html_page[] = R"HTML(
       reflectPeerConnection.addTrack(audioTrack, stream)
       reflectPeerConnection.createDataChannel('')
 
-      const offer = await reflectPeerConnection.createOffer({ offerToReceiveAudio: false })
+      const offer = await reflectPeerConnection.createOffer()
       await reflectPeerConnection.setLocalDescription(offer)
+
+      reflectPeerConnection.ontrack = (event) => {
+        console.log('audio from device')
+      };
 
       reflectPeerConnection.onicegatheringstatechange = async () => {
         if (reflectPeerConnection.iceGatheringState === "complete") {

@@ -4,10 +4,10 @@
 #include <peer.h>
 
 #define CHANNELS 1
-#define SAMPLE_RATE (24000)
+#define SAMPLE_RATE (8000)
 #define BITS_PER_SAMPLE 16
 
-#define PCM_BUFFER_SIZE 960
+#define PCM_BUFFER_SIZE 320
 
 #define OPUS_BUFFER_SIZE 1276
 #define OPUS_ENCODER_BITRATE 30000
@@ -75,10 +75,12 @@ void reflect_play_audio(uint8_t *data, size_t size) {
 }
 
 void reflect_send_audio(PeerConnection *peer_connection) {
-  ESP_ERROR_CHECK(esp_codec_dev_read(mic_codec_dev, read_buffer, PCM_BUFFER_SIZE));
+  ESP_ERROR_CHECK(
+      esp_codec_dev_read(mic_codec_dev, read_buffer, PCM_BUFFER_SIZE));
 
   auto encoded_size = opus_encode(opus_encoder, (const opus_int16 *)read_buffer,
                                   PCM_BUFFER_SIZE / sizeof(uint16_t),
                                   encoder_output_buffer, OPUS_BUFFER_SIZE);
-  peer_connection_send_audio(peer_connection, encoder_output_buffer, encoded_size);
+  peer_connection_send_audio(peer_connection, encoder_output_buffer,
+                             encoded_size);
 }
