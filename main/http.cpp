@@ -4,71 +4,7 @@
 
 void reflect_new_peer_connection(char *offer, char *answer);
 
-static constexpr char html_page[] = R"HTML(
-<html>
-<head>
-  <meta charset="UTF-8">
-  <title>OpenAI Realtime Audio Bridge</title>
-  <style>
-    body { font-family: sans-serif; padding: 1rem; }
-    #log { white-space: pre-wrap; border: 1px solid #ccc; padding: 1rem; height: 300px; overflow-y: scroll; }
-  </style>
-</head>
-<body>
-  <h1>Reflect</h1>
-
-  <label>OpenAI API Key:
-    <input type="password" id="apiKey" placeholder="sk-..." size="42">
-  </label><br/>
-  </label><br/>
-  <button onclick='window.startReflect()'>Start Reflect</button>
-
-  <h2>Status</h2>
-  <div id="log"></div>
-
-  <script>
-    window.startReflect = async () => {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-      const [audioTrack] = stream.getAudioTracks()
-
-      const reflectPeerConnection = new RTCPeerConnection()
-      reflectPeerConnection.addTrack(audioTrack, stream)
-      reflectPeerConnection.createDataChannel('')
-
-      const offer = await reflectPeerConnection.createOffer()
-      await reflectPeerConnection.setLocalDescription(offer)
-
-      reflectPeerConnection.ontrack = (event) => {
-        console.log('audio from device')
-      };
-
-      reflectPeerConnection.onicegatheringstatechange = async () => {
-        if (reflectPeerConnection.iceGatheringState === "complete") {
-          const offer = reflectPeerConnection.localDescription.sdp.split("\r\n").filter(line => {
-            if (!line.includes("a=candidate")) {
-              return true
-            }
-
-            return line.includes("192.168.4") && line.includes("udp")
-          }).join("\r\n")
-
-          const res = await fetch("/connect", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: offer,
-          })
-          let answer = await res.text()
-          answer = answer.replace("BUNDLE audio datachannel", "BUNDLE 0 1")
-                         .replace("a=mid:audio", "a=mid:0")
-                         .replace("a=mid:datachannel", "a=mid:1")
-          await reflectPeerConnection.setRemoteDescription({type: 'answer', sdp: answer})
-        }
-      }
-    }
-  </script>
-</body>
-</html>
-)HTML";
+extern const char html_page[] asm("_binary_index_html_start");
 
 esp_err_t root_get_handler(httpd_req_t *req) {
   httpd_resp_set_type(req, "text/html; charset=utf-8");
