@@ -64,7 +64,16 @@ Today's calendar: [
                             hue: {
                                 type: "string",
                                 description: "Light hue to set",
-                                enum: ["warm sunrise", "calm blue", "energetic white", "mood red"]
+                                 enum: [
+                                     "warm sunrise",
+                                     "calm blue",
+                                     "energetic white",
+                                     "mood red",
+                                     "soft violet",
+                                     "forest green",
+                                     "ocean teal",
+                                     "golden hour"
+                                 ]
                             }
                         },
                         required: ["mode", "hue"]
@@ -85,11 +94,6 @@ Today's calendar: [
                 s: 45,
                 b: 95
             },
-            'focus white': {
-                h: 40,
-                s: 10,
-                b: 100
-            },
             'energetic white': {
                 h: 40,
                 s: 10,
@@ -99,6 +103,26 @@ Today's calendar: [
                 h: 345,
                 s: 50,
                 b: 90
+             },
+             'soft violet': {
+                 h: 270,
+                 s: 50,
+                 b: 90
+             },
+             'forest green': {
+                 h: 120,
+                 s: 60,
+                 b: 90
+             },
+             'ocean teal': {
+                 h: 180,
+                 s: 50,
+                 b: 90
+             },
+             'golden hour': {
+                 h: 45,
+                 s: 80,
+                 b: 90
             }
         };
 
