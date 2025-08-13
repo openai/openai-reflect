@@ -1,8 +1,8 @@
 #include "bsp/esp-bsp.h"
 
+#include <atomic>
 #include <opus.h>
 #include <peer.h>
-#include <atomic>
 
 #define CHANNELS 1
 #define SAMPLE_RATE (8000)
@@ -13,6 +13,8 @@
 #define OPUS_BUFFER_SIZE 1276
 #define OPUS_ENCODER_BITRATE 30000
 #define OPUS_ENCODER_COMPLEXITY 0
+
+bool reflect_display_pressed(void);
 
 esp_codec_dev_sample_info_t fs = {
     .bits_per_sample = BITS_PER_SAMPLE,
@@ -81,6 +83,10 @@ void reflect_play_audio(uint8_t *data, size_t size) {
   auto decoded_size =
       opus_decode(opus_decoder, data, size, decoder_buffer, PCM_BUFFER_SIZE, 0);
 
+  if (reflect_display_pressed()) {
+    memset(decoder_buffer, 0, PCM_BUFFER_SIZE);
+  }
+
   if (decoded_size > 0) {
     set_is_playing(decoder_buffer);
     esp_codec_dev_write(spk_codec_dev, decoder_buffer, PCM_BUFFER_SIZE);
@@ -91,7 +97,8 @@ void reflect_send_audio(PeerConnection *peer_connection) {
   if (is_playing) {
     memset(read_buffer, 0, PCM_BUFFER_SIZE);
   } else {
-      ESP_ERROR_CHECK(esp_codec_dev_read(mic_codec_dev, read_buffer, PCM_BUFFER_SIZE));
+    ESP_ERROR_CHECK(
+        esp_codec_dev_read(mic_codec_dev, read_buffer, PCM_BUFFER_SIZE));
   }
 
   auto encoded_size = opus_encode(opus_encoder, (const opus_int16 *)read_buffer,

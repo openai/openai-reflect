@@ -1,4 +1,6 @@
 #include "bsp/esp-bsp.h"
+#include "bsp/touch.h"
+#include "esp_lcd_touch.h"
 
 #define LV_ATTRIBUTE_MEM_ALIGN
 #define LV_ATTRIBUTE_OAI
@@ -148,6 +150,8 @@ static void spinner_set_angle(void *obj, int32_t v)
     lv_image_set_rotation((lv_obj_t *)obj, v);
 }
 
+esp_lcd_touch_handle_t tp = NULL;
+
 void reflect_display(void)
 {
     bsp_display_start();
@@ -176,5 +180,17 @@ void reflect_display(void)
     lv_anim_set_repeat_count(&a, LV_ANIM_REPEAT_INFINITE);
     lv_anim_start(&a);
 
+    ESP_ERROR_CHECK(bsp_touch_new(NULL, &tp));
+
     bsp_display_unlock();
+}
+
+bool reflect_display_pressed(void) {
+    uint16_t touch_x[1];
+    uint16_t touch_y[1];
+    uint16_t touch_strength[1];
+    uint8_t touch_cnt = 0;
+
+    esp_lcd_touch_read_data(tp);
+    return esp_lcd_touch_get_coordinates(tp, touch_x, touch_y, touch_strength, &touch_cnt, 1);
 }
