@@ -57,6 +57,9 @@ We hope to expand this list. Reflect was written for a specific device to start,
 * [LIFX Color A19](https://www.amazon.com/dp/B08BKZFHQQ)
 
 ### Installing
+
+
+
 ##### Setup esp-idf
 ```
 git clone -b v5.5 --recursive https://github.com/espressif/esp-idf.git
@@ -72,7 +75,7 @@ idf.py flash
 ```
 
 ### Device with running code
-<img src="./.github/installed.png" alt="Reflect">
+<video src="https://github.com/user-attachments/assets/d56fcb7a-5807-43f1-b314-070e2629bd39" controls />
 
 ### Using
 The device creates a WiFi Access Point named `reflect`. Connect to and it and
