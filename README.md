@@ -74,9 +74,12 @@ cd esp-idf
 idf.py flash
 ```
 
-### Device with running code
-<video src="https://github.com/user-attachments/assets/d56fcb7a-5807-43f1-b314-070e2629bd39" controls />
-
 ### Using
-The device creates a WiFi Access Point named `reflect`. Connect to and it and
+The device creates a WiFi Access Point named `reflect`. Join this network and then
 open http://192.168.4.1 to start a session.
+
+If you connected successfully you will see two audio elements on the page. One for Realtime API audio
+and one for audio from the device. You can unmute these audio elements to for debugging.
+
+### Device
+<video src="https://github.com/user-attachments/assets/d56fcb7a-5807-43f1-b314-070e2629bd39" autoplay> </video>
