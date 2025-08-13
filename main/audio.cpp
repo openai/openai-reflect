@@ -2,6 +2,7 @@
 
 #include <opus.h>
 #include <peer.h>
+#include <atomic>
 
 #define CHANNELS 1
 #define SAMPLE_RATE (8000)
@@ -30,6 +31,17 @@ opus_int16 *decoder_buffer = NULL;
 OpusEncoder *opus_encoder = NULL;
 uint8_t *encoder_output_buffer = NULL;
 uint8_t *read_buffer = NULL;
+
+std::atomic<bool> is_playing = false;
+void set_is_playing(int16_t *in_buf) {
+  bool any_set = false;
+  for (size_t i = 0; i < (PCM_BUFFER_SIZE / 2); i++) {
+    if (in_buf[i] != -1 && in_buf[i] != 0 && in_buf[i] != 1) {
+      any_set = true;
+    }
+  }
+  is_playing = any_set;
+}
 
 void reflect_audio() {
   // Speaker
@@ -70,13 +82,17 @@ void reflect_play_audio(uint8_t *data, size_t size) {
       opus_decode(opus_decoder, data, size, decoder_buffer, PCM_BUFFER_SIZE, 0);
 
   if (decoded_size > 0) {
+    set_is_playing(decoder_buffer);
     esp_codec_dev_write(spk_codec_dev, decoder_buffer, PCM_BUFFER_SIZE);
   }
 }
 
 void reflect_send_audio(PeerConnection *peer_connection) {
-  ESP_ERROR_CHECK(
-      esp_codec_dev_read(mic_codec_dev, read_buffer, PCM_BUFFER_SIZE));
+  if (is_playing) {
+    memset(read_buffer, 0, PCM_BUFFER_SIZE);
+  } else {
+      ESP_ERROR_CHECK(esp_codec_dev_read(mic_codec_dev, read_buffer, PCM_BUFFER_SIZE));
+  }
 
   auto encoded_size = opus_encode(opus_encoder, (const opus_int16 *)read_buffer,
                                   PCM_BUFFER_SIZE / sizeof(uint16_t),
