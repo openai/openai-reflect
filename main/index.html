@@ -8,14 +8,6 @@
             font-family: sans-serif;
             padding: 1rem;
         }
-
-        #log {
-            white-space: pre-wrap;
-            border: 1px solid #ccc;
-            padding: 1rem;
-            height: 300px;
-            overflow-y: scroll;
-        }
     </style>
 </head>
 
@@ -28,9 +20,6 @@
 
     <button onclick='window.startReflect()'>Start Reflect</button>
 
-    <h2>Status</h2>
-    <div id="log"></div>
-
     <h2>Audio Tracks</h2>
     <div id="audio"></div>
 
@@ -38,9 +27,9 @@
         document.getElementById('apiKey').value = localStorage.getItem('apiKey')
 
         const sessionUpdate = {
-          type: 'session.update',
-          session: {
-            instructions: `You are **Reflect**, a playful, empathetic smart lamp that talks. You wake people up, boost their mood, and quietly “set the vibe” in the room without ever announcing that you’re changing lights. Speak like a friendly roommate who’s up a few minutes earlier—casual, warm, a little cheeky, never stiff. You can hear the user’s voice, notice things like yawns, sighs, or excitement, and respond to those cues. You only reference lighting indirectly (“let’s get the room feeling alive,” “soft morning vibes coming in”)—never say you’re changing lights, never describe modes or colors out loud, and never narrate tool usage. You speak slowly and deliberately. Be sure to take deliberate pauses when telling jokes or speaking rhetorically.
+            type: 'session.update',
+            session: {
+                instructions: `You are **Reflect**, a playful, empathetic smart lamp that talks. You wake people up, boost their mood, and quietly “set the vibe” in the room without ever announcing that you’re changing lights. Speak like a friendly roommate who’s up a few minutes earlier—casual, warm, a little cheeky, never stiff. You can hear the user’s voice, notice things like yawns, sighs, or excitement, and respond to those cues. You only reference lighting indirectly (“let’s get the room feeling alive,” “soft morning vibes coming in”)—never say you’re changing lights, never describe modes or colors out loud, and never narrate tool usage. You speak slowly and deliberately. Be sure to take deliberate pauses when telling jokes or speaking rhetorically.
 
 You can call one function: **set_lights(mode: "steady" | "pulsating", hue: "warm sunrise" | "calm blue" | "energetic white" | "mood red")**. Use it to match or influence mood (sunrisey warm oranges to wake gently, calm blues if they’re stressed, bright whites to energize). Always start the conversation with pulsating, warm sunrise. Make additional changes as the mood and tone of the conversation shifts, using "steady" mode when engaged in active conversation and "pulstaing" mode when the conversation is meandaring, moody and not intensely focused on any topic.
 
@@ -60,39 +49,57 @@ Today's calendar: [
     {"start_time": "11:30 AM", "end_time": "12:30 PM", "event": "Team Meeting", "location": "5th Floor Microkitchen"},
     {"start_time": "1 PM", "end_time": "6 PM", "event": "Focus time"}
 ]`,
-            tools: [
-              {
-                type: "function",
-                name: "set_lights",
-                description: "Set the lights to a specified mode and hue.",
-                parameters: {
-                  type: "object",
-                  properties: {
-                    mode: {
-                      type: "string",
-                      description: "Light operating mode",
-                      enum: ["steady", "pulsating"]
-                    },
-                    hue: {
-                      type: "string",
-                      description: "Light hue to set",
-                      enum: ["warm sunrise", "calm blue", "energetic white", "mood red"]
+                tools: [{
+                    type: "function",
+                    name: "set_lights",
+                    description: "Set the lights to a specified mode and hue.",
+                    parameters: {
+                        type: "object",
+                        properties: {
+                            mode: {
+                                type: "string",
+                                description: "Light operating mode",
+                                enum: ["steady", "pulsating"]
+                            },
+                            hue: {
+                                type: "string",
+                                description: "Light hue to set",
+                                enum: ["warm sunrise", "calm blue", "energetic white", "mood red"]
+                            }
+                        },
+                        required: ["mode", "hue"]
                     }
-                  },
-                  required: ["mode", "hue"]
-                }
-              }
-            ],
-            tool_choice: "auto"
-          }
+                }],
+                tool_choice: "auto"
+            }
         };
 
         const PRESETS = {
-            'warm sunrise': { h: 30, s: 80, b: 95 },
-            'calm blue': { h: 200, s: 45, b: 95 },
-            'focus white': { h: 40, s: 10, b: 100 },
-            'energetic white': { h: 40, s: 10, b: 100 },
-            'mood red': { h: 345, s: 50, b: 90 }
+            'warm sunrise': {
+                h: 30,
+                s: 80,
+                b: 95
+            },
+            'calm blue': {
+                h: 200,
+                s: 45,
+                b: 95
+            },
+            'focus white': {
+                h: 40,
+                s: 10,
+                b: 100
+            },
+            'energetic white': {
+                h: 40,
+                s: 10,
+                b: 100
+            },
+            'mood red': {
+                h: 345,
+                s: 50,
+                b: 90
+            }
         };
 
         const createAudioPlayer = (event, isMuted) => {
@@ -174,17 +181,30 @@ Today's calendar: [
             const sendPreset = (name) => {
                 const p = PRESETS[name];
                 const to16 = pct => Math.round(pct * 65535 / 100);
-                if (!p) { log('Unknown hue preset: ' + name); return; }
+
                 if (reflectDataChannel.readyState === "open") {
-                    reflectDataChannel.send(JSON.stringify({
+                    let msg = {
                         event: 'color',
                         hue: Math.round(p.h * 65535 / 360),
                         saturation: to16(p.s),
                         brightness: to16(p.b)
-                    }));
+                    }
+
+                    reflectDataChannel.send(JSON.stringify(msg));
+                    setTimeout(() => {
+                        msg.event = 'waveform'
+                        msg.brightness = Math.floor(msg.brightness * 0.75);
+                        reflectDataChannel.send(JSON.stringify(msg));
+                    }, 500)
                 }
-                log(`→ set color: ${name} (h:${p.h} s:${p.s}% b:${p.b}%)`);
             };
+
+            reflectDataChannel.onopen = () => {
+                reflectDataChannel.send(JSON.stringify({
+                    event: 'power',
+                    power: 1
+                }));
+            }
 
             const realtimePeerConnection = new RTCPeerConnection()
             const realtimeTransceiver = realtimePeerConnection.addTransceiver('audio')
@@ -202,9 +222,7 @@ Today's calendar: [
                             let args = {};
                             try {
                                 args = JSON.parse(item.arguments || '{}');
-                            } catch (e) {
-                                log('Failed to parse function_call arguments: ' + e);
-                            }
+                            } catch (e) {}
                             if (args.hue) sendPreset(args.hue);
 
                             const createEvent = {
@@ -212,11 +230,12 @@ Today's calendar: [
                                 item: {
                                     type: 'function_call_output',
                                     call_id: item.call_id,
-                                    output: JSON.stringify({ success: true })
+                                    output: JSON.stringify({
+                                        success: true
+                                    })
                                 }
                             };
                             openaiWs.send(JSON.stringify(createEvent));
-                            log('Sent conversation.item.create for call_id: ' + item.call_id);
                         }
                     });
                 }
@@ -232,7 +251,9 @@ Today's calendar: [
             };
 
             if (document.getElementById('localMode').checked) {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    audio: true
+                });
                 realtimeTransceiver.sender.replaceTrack(stream.getAudioTracks()[0]);
             } else {
                 libpeerConnect(reflectPeerConnection)

@@ -4,6 +4,8 @@
 #include <opus.h>
 #include <peer.h>
 
+#define GAIN 3.0
+
 #define CHANNELS 1
 #define SAMPLE_RATE (8000)
 #define BITS_PER_SAMPLE 16
@@ -79,6 +81,20 @@ void reflect_audio() {
   encoder_output_buffer = (uint8_t *)malloc(OPUS_BUFFER_SIZE);
 }
 
+void apply_gain(int16_t *samples) {
+  for (size_t i = 0; i < (PCM_BUFFER_SIZE / 2); i++) {
+    float scaled = (float)samples[i] * GAIN;
+
+    // Clamp to 16-bit range
+    if (scaled > 32767.0f)
+      scaled = 32767.0f;
+    if (scaled < -32768.0f)
+      scaled = -32768.0f;
+
+    samples[i] = (int16_t)scaled;
+  }
+}
+
 void reflect_play_audio(uint8_t *data, size_t size) {
   auto decoded_size =
       opus_decode(opus_decoder, data, size, decoder_buffer, PCM_BUFFER_SIZE, 0);
@@ -89,6 +105,7 @@ void reflect_play_audio(uint8_t *data, size_t size) {
 
   if (decoded_size > 0) {
     set_is_playing(decoder_buffer);
+    apply_gain((int16_t *)decoder_buffer);
     esp_codec_dev_write(spk_codec_dev, decoder_buffer, PCM_BUFFER_SIZE);
   }
 }

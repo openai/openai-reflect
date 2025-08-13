@@ -1,3 +1,4 @@
+#include "cJSON.h"
 #include "esp_timer.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"
@@ -11,11 +12,36 @@
 void reflect_play_audio(uint8_t *, size_t);
 void reflect_send_audio(PeerConnection *);
 void send_lifx_set_power(int);
+void send_lifx_set_waveform(uint16_t, uint16_t, uint16_t);
+void send_lifx_set_color(uint16_t, uint16_t, uint16_t);
+void reflect_set_spin(bool);
 
 PeerConnection *peer_connection = NULL;
 
 static void onicecandidate_task(char *description, void *user_data) {
   strcpy((char *)user_data, description);
+}
+
+static void handle_json(char *command, size_t, void *, uint16_t) {
+  cJSON *root = cJSON_Parse(command);
+  if (root != NULL) {
+    cJSON *event = cJSON_GetObjectItemCaseSensitive(root, "event");
+    if (strcmp("color", event->valuestring) == 0) {
+      send_lifx_set_color(
+          cJSON_GetObjectItemCaseSensitive(root, "hue")->valueint,
+          cJSON_GetObjectItemCaseSensitive(root, "saturation")->valueint,
+          cJSON_GetObjectItemCaseSensitive(root, "brightness")->valueint);
+    } else if (strcmp("waveform", event->valuestring) == 0) {
+      send_lifx_set_waveform(
+          cJSON_GetObjectItemCaseSensitive(root, "hue")->valueint,
+          cJSON_GetObjectItemCaseSensitive(root, "saturation")->valueint,
+          cJSON_GetObjectItemCaseSensitive(root, "brightness")->valueint);
+    } else if (strcmp("power", event->valuestring) == 0) {
+      send_lifx_set_power(
+          cJSON_GetObjectItemCaseSensitive(root, "power")->valueint);
+    }
+    cJSON_Delete(root);
+  }
 }
 
 StaticTask_t send_audio_task_buffer;
@@ -63,6 +89,8 @@ void reflect_new_peer_connection(char *offer, char *answer) {
         }
       });
   peer_connection_set_remote_description(peer_connection, offer);
+  peer_connection_ondatachannel(
+      peer_connection, handle_json, [](void *) -> void {}, NULL);
 
   while (strlen(answer) == 0) {
     vTaskDelay(pdMS_TO_TICKS(TICK_INTERVAL));
@@ -75,8 +103,11 @@ void reflect_peer_connection_loop() {
   for (uint32_t i = 0;; i++) {
     if (peer_connection != nullptr) {
       peer_connection_loop(peer_connection);
-    } else if ((i % 3000) == 0) {
-      send_lifx_set_power(0);
+    }
+
+    if ((i % 3000) == 0) {
+      send_lifx_set_power(peer_connection != nullptr);
+      reflect_set_spin(peer_connection != nullptr);
     }
 
     vTaskDelay(pdMS_TO_TICKS(1));

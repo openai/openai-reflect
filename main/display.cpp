@@ -145,9 +145,13 @@ const lv_image_dsc_t oai = {
 
 static lv_obj_t *spinning_img;
 
+static bool should_spin = false;
+
 static void spinner_set_angle(void *obj, int32_t v)
 {
-    lv_image_set_rotation((lv_obj_t *)obj, v);
+    if (should_spin) {
+        lv_image_set_rotation((lv_obj_t *)obj, v);
+    }
 }
 
 esp_lcd_touch_handle_t tp = NULL;
@@ -193,4 +197,8 @@ bool reflect_display_pressed(void) {
 
     esp_lcd_touch_read_data(tp);
     return esp_lcd_touch_get_coordinates(tp, touch_x, touch_y, touch_strength, &touch_cnt, 1);
+}
+
+void reflect_set_spin(bool s) {
+    should_spin = s;
 }
