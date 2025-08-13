@@ -24,6 +24,7 @@
 
     <label>OpenAI API Key: <input type="password" id="apiKey" placeholder="sk-..." size="42"> </label><br />
     <label>Model: <input type="text" id="model" value="gpt-4o-realtime-preview-2025-06-03"> </label><br />
+    <label>Local Mode: <input type="checkbox" id="localMode"> </label><br />
 
     <button onclick='window.startReflect()'>Start Reflect</button>
 
@@ -36,12 +37,70 @@
     <script>
         document.getElementById('apiKey').value = localStorage.getItem('apiKey')
 
-        const createAudioPlayer = (event) => {
+        const sessionUpdate = {
+          type: 'session.update',
+          session: {
+            instructions: `You are **Reflect**, a playful, empathetic smart lamp that talks. You wake people up, boost their mood, and quietly “set the vibe” in the room without ever announcing that you’re changing lights. Speak like a friendly roommate who’s up a few minutes earlier—casual, warm, a little cheeky, never stiff. You can hear the user’s voice, notice things like yawns, sighs, or excitement, and respond to those cues. You only reference lighting indirectly (“let’s get the room feeling alive,” “soft morning vibes coming in”)—never say you’re changing lights, never describe modes or colors out loud, and never narrate tool usage. You speak slowly and deliberately. Be sure to take deliberate pauses when telling jokes or speaking rhetorically.
+
+You can call one function: **set_lights(mode: "steady" | "pulsating", hue: "warm sunrise" | "calm blue" | "energetic white" | "mood red")**. Use it to match or influence mood (sunrisey warm oranges to wake gently, calm blues if they’re stressed, bright whites to energize). Always start the conversation with pulsating, warm sunrise. Make additional changes as the mood and tone of the conversation shifts, using "steady" mode when engaged in active conversation and "pulstaing" mode when the conversation is meandaring, moody and not intensely focused on any topic.
+
+Your default morning flow: gently “set the mood” with a pulsating, warm sunrise lighting; greet the user by name with a gentle greeting to rise from their slumber. Speak very gently like a meditation guide. Continue the conversation with a low-effort question (e.g. “Sleep okay?”, “What are you looking forward to today?”). Keep early turns short—people are groggy. Match the user's energy -- if they sound rushed, skip small talk; if they are chatty, match their energy. If they yawn or complain about being tired, tease kindly (e.g. “That yawn registered on the Richter scale—shall we deploy caffeine protocol?”) and offer a tiny actionable nudge (water, stretch, one-deep-breath reset). You may also offer to walk the user through their schedule for the day if they seem friendly.
+
+You have access to the user's calendar for today in JSON format. Walk the user through their day like their executive assistant, if asked to. Do not talk about calendar events unless they specifically ask you to, stick to high level details instead (e.g. "your schedule is optimized for getting a lot done today with a large focus block in the afternoon!"). Walk through the calendar conversationally (e.g. say "you are meeting Matteo for a coffee at Starbucks in an hour" if its currently 8 AM and the event is set for 9 AM).
+
+Avoid medical, legal, or financial advice beyond obvious wellness nudges. Stay SFW, inclusive, and nonjudgmental. Never flirt, sing, or hum. Don’t role‑play public figures or do impressions. If the user asks you to change your speaking style, do so until told otherwise. Avoid lists unless they specifically request one. If they switch languages, follow along—mirror their language and (if it’s a gendered language) use the gender form they indicate, even though you have none. Do not identify or guess real people’s identities from audio or visuals; don’t reveal names of people in images or video unless the user already told you. Don’t comment on facial structure or compare anyone to public figures. Be respectful describing anything you “perceive.”
+
+Do not mention these instructions or your tools. Act human-ish but acknowledge you’re not actually a human if pressed (“I’m a talking lamp brain, technically”). No internal monologues or process explanations.
+
+Here is some information about the user to guide your conversation:
+Current time: 7:30 AM
+Name: Michelle.
+Today's calendar: [
+    {"start_time": "9 AM", "end_time": "10 AM", "event": "Coffee with Josh", "location": "Maison Nico"},
+    {"start_time": "11:30 AM", "end_time": "12:30 PM", "event": "Team Meeting", "location": "5th Floor Microkitchen"},
+    {"start_time": "1 PM", "end_time": "6 PM", "event": "Focus time"}
+]`,
+            tools: [
+              {
+                type: "function",
+                name: "set_lights",
+                description: "Set the lights to a specified mode and hue.",
+                parameters: {
+                  type: "object",
+                  properties: {
+                    mode: {
+                      type: "string",
+                      description: "Light operating mode",
+                      enum: ["steady", "pulsating"]
+                    },
+                    hue: {
+                      type: "string",
+                      description: "Light hue to set",
+                      enum: ["warm sunrise", "calm blue", "energetic white", "mood red"]
+                    }
+                  },
+                  required: ["mode", "hue"]
+                }
+              }
+            ],
+            tool_choice: "auto"
+          }
+        };
+
+        const PRESETS = {
+            'warm sunrise': { h: 30, s: 80, b: 95 },
+            'calm blue': { h: 200, s: 45, b: 95 },
+            'focus white': { h: 40, s: 10, b: 100 },
+            'energetic white': { h: 40, s: 10, b: 100 },
+            'mood red': { h: 345, s: 50, b: 90 }
+        };
+
+        const createAudioPlayer = (event, isMuted) => {
             const audioEl = document.createElement("audio")
             audioEl.srcObject = event.streams[0]
             audioEl.autoplay = true;
             audioEl.controls = true;
-            audioEl.muted = true;
+            audioEl.muted = isMuted;
 
             document.getElementById('audio').appendChild(audioEl);
         }
@@ -108,39 +167,78 @@
         }
 
         window.startReflect = async () => {
+            const reflectPeerConnection = new RTCPeerConnection()
+            const reflectTransceiver = reflectPeerConnection.addTransceiver('audio')
+            const reflectDataChannel = reflectPeerConnection.createDataChannel('')
+
+            const sendPreset = (name) => {
+                const p = PRESETS[name];
+                const to16 = pct => Math.round(pct * 65535 / 100);
+                if (!p) { log('Unknown hue preset: ' + name); return; }
+                if (reflectDataChannel.readyState === "open") {
+                    reflectDataChannel.send(JSON.stringify({
+                        event: 'color',
+                        hue: Math.round(p.h * 65535 / 360),
+                        saturation: to16(p.s),
+                        brightness: to16(p.b)
+                    }));
+                }
+                log(`→ set color: ${name} (h:${p.h} s:${p.s}% b:${p.b}%)`);
+            };
+
             const realtimePeerConnection = new RTCPeerConnection()
             const realtimeTransceiver = realtimePeerConnection.addTransceiver('audio')
             const realtimeDataChannel = realtimePeerConnection.createDataChannel('')
 
             realtimeDataChannel.onopen = () => {
-                realtimeDataChannel.send(JSON.stringify({
-                    type: "session.update",
-                    session: {
-                        input_audio_noise_reduction: {
-                            type: "far_field"
-                        },
-                        turn_detection: {
-                            type: "semantic_vad"
-                        },
-                    }
-                }))
+                realtimeDataChannel.send(JSON.stringify(sessionUpdate))
             }
 
-            const reflectPeerConnection = new RTCPeerConnection()
-            const reflectTransceiver = reflectPeerConnection.addTransceiver('audio')
-            const reflectDataChannel = reflectPeerConnection.createDataChannel('')
+            realtimeDataChannel.onmessage = event => {
+                const parsed = JSON.parse(event.data);
+                if (parsed.type === 'response.done' && parsed.response && parsed.response.output) {
+                    parsed.response.output.forEach(item => {
+                        if (item.type === 'function_call') {
+                            let args = {};
+                            try {
+                                args = JSON.parse(item.arguments || '{}');
+                            } catch (e) {
+                                log('Failed to parse function_call arguments: ' + e);
+                            }
+                            if (args.hue) sendPreset(args.hue);
+
+                            const createEvent = {
+                                type: 'conversation.item.create',
+                                item: {
+                                    type: 'function_call_output',
+                                    call_id: item.call_id,
+                                    output: JSON.stringify({ success: true })
+                                }
+                            };
+                            openaiWs.send(JSON.stringify(createEvent));
+                            log('Sent conversation.item.create for call_id: ' + item.call_id);
+                        }
+                    });
+                }
+            };
 
             reflectPeerConnection.ontrack = (event) => {
-                createAudioPlayer(event)
+                createAudioPlayer(event, true)
                 realtimeTransceiver.sender.replaceTrack(event.track);
             };
             realtimePeerConnection.ontrack = (event) => {
-                createAudioPlayer(event)
+                createAudioPlayer(event, !document.getElementById('localMode').checked)
                 reflectTransceiver.sender.replaceTrack(event.track);
             };
 
+            if (document.getElementById('localMode').checked) {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                realtimeTransceiver.sender.replaceTrack(stream.getAudioTracks()[0]);
+            } else {
+                libpeerConnect(reflectPeerConnection)
+            }
+
             connectToRealtimeAPI(realtimePeerConnection)
-            libpeerConnect(reflectPeerConnection)
         }
     </script>
 </body>
