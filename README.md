@@ -82,4 +82,4 @@ If you connected successfully you will see two audio elements on the page. One f
 and one for audio from the device. You can unmute these audio elements to for debugging.
 
 ### Device
-<video src="https://github.com/user-attachments/assets/d56fcb7a-5807-43f1-b314-070e2629bd39" autoplay> </video>
+<video src="https://github.com/user-attachments/assets/d56fcb7a-5807-43f1-b314-070e2629bd39" autoplay loop muted> </video>
