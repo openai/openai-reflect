@@ -4,13 +4,13 @@
 #include <opus.h>
 #include <peer.h>
 
-#define GAIN 3.0
+#define GAIN 10.0
 
 #define CHANNELS 1
-#define SAMPLE_RATE (8000)
+#define SAMPLE_RATE (16000)
 #define BITS_PER_SAMPLE 16
 
-#define PCM_BUFFER_SIZE 320
+#define PCM_BUFFER_SIZE 640
 
 #define OPUS_BUFFER_SIZE 1276
 #define OPUS_ENCODER_BITRATE 30000
