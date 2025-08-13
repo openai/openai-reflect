@@ -10,6 +10,7 @@
 #define TICK_INTERVAL 15
 void reflect_play_audio(uint8_t *, size_t);
 void reflect_send_audio(PeerConnection *);
+void send_lifx_set_power(int);
 
 PeerConnection *peer_connection = NULL;
 
@@ -71,9 +72,11 @@ void reflect_new_peer_connection(char *offer, char *answer) {
 void reflect_peer_connection_loop() {
   peer_init();
 
-  while (1) {
+  for (uint32_t i = 0;; i++) {
     if (peer_connection != nullptr) {
       peer_connection_loop(peer_connection);
+    } else if ((i % 3000) == 0) {
+      send_lifx_set_power(0);
     }
 
     vTaskDelay(pdMS_TO_TICKS(1));
