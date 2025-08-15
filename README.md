@@ -3,6 +3,8 @@ Currently it is built to target espressif devices, but we hope to expand
 its capabilites if users find it useful. The following were some of the
 ideas/inspirations during the project.
 
+[video](https://www.youtube.com/watch?v=G5OUnpPAyCg) demonstration of the device.
+
 <hr />
 
 <table>
