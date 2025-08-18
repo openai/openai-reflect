@@ -1,8 +1,8 @@
-#include "bsp/esp-bsp.h"
-
 #include <atomic>
+#include <bsp/esp-bsp.h>
 #include <opus.h>
-#include <peer.h>
+
+#include "reflect.hpp"
 
 #define GAIN 5.0
 
@@ -15,8 +15,6 @@
 #define OPUS_BUFFER_SIZE 1276
 #define OPUS_ENCODER_BITRATE 30000
 #define OPUS_ENCODER_COMPLEXITY 0
-
-bool reflect_display_pressed(void);
 
 esp_codec_dev_sample_info_t fs = {
     .bits_per_sample = BITS_PER_SAMPLE,

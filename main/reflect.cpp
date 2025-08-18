@@ -1,16 +1,11 @@
-#include "esp_err.h"
-#include "esp_event.h"
-#include "esp_netif.h"
-#include "nvs_flash.h"
+#include <esp_err.h>
+#include <esp_event.h>
+#include <esp_netif.h>
+#include <nvs_flash.h>
+
+#include "reflect.hpp"
 
 #define TAG "reflect"
-
-void reflect_display();
-void reflect_audio();
-void reflect_wifi();
-void reflect_lifx();
-void reflect_http();
-void reflect_peer_connection_loop();
 
 extern "C" void app_main(void) {
   ESP_ERROR_CHECK(nvs_flash_init());

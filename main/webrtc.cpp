@@ -5,21 +5,13 @@
 #include "freertos/task.h"
 #include <cstring>
 
-#include <opus.h>
-#include <peer.h>
+#include "reflect.hpp"
 
 #define TICK_INTERVAL 15
-void reflect_play_audio(uint8_t *, size_t);
-void reflect_send_audio(PeerConnection *);
-void send_lifx_set_power(int);
-void send_lifx_set_waveform(uint16_t, uint16_t, uint16_t);
-void send_lifx_set_color(uint16_t, uint16_t, uint16_t);
-void reflect_set_spin(bool);
-
 PeerConnection *peer_connection = NULL;
 
 static void onicecandidate_task(char *description, void *user_data) {
-  strcpy((char *)user_data, description);
+  strncpy((char *)user_data, description, SDP_BUFFER_SIZE - 1);
 }
 
 static void handle_json(char *command, size_t, void *, uint16_t) {
