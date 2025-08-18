@@ -1,3 +1,8 @@
+> [!CAUTION]
+> This is a demo/hackathon project. This code is provided *as-is* without any warranty or guarantees.
+> It has not been extensively reviewed for security, reliability, or fitness for any purpose.
+> Use at your own risk.
+
 **Reflect** is a hardware AI Assistant that was built during a OpenAI hackathon.
 Currently it is built to target espressif devices, but we hope to expand
 its capabilites if users find it useful. The following were some of the
