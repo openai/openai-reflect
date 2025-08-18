@@ -64,6 +64,7 @@ void reflect_audio() {
   opus_decoder = opus_decoder_create(SAMPLE_RATE, 1, &opus_error);
   assert(opus_error == OPUS_OK);
   decoder_buffer = (opus_int16 *)malloc(PCM_BUFFER_SIZE);
+  assert(decoder_buffer != nullptr);
 
   // Encoder
   opus_encoder =
@@ -78,7 +79,10 @@ void reflect_audio() {
 
   read_buffer =
       (uint8_t *)heap_caps_malloc(PCM_BUFFER_SIZE, MALLOC_CAP_DEFAULT);
+  assert(read_buffer != nullptr);
+
   encoder_output_buffer = (uint8_t *)malloc(OPUS_BUFFER_SIZE);
+  assert(encoder_output_buffer != nullptr);
 }
 
 void apply_gain(int16_t *samples) {

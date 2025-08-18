@@ -83,6 +83,7 @@ void reflect_new_peer_connection(char *offer, char *answer) {
         if (state == PEER_CONNECTION_CONNECTED) {
           StackType_t *stack_memory = (StackType_t *)heap_caps_malloc(
               30000 * sizeof(StackType_t), MALLOC_CAP_SPIRAM);
+          assert(stack_memory != nullptr);
           xTaskCreateStaticPinnedToCore(
               reflect_send_audio_task, "audio_publisher", 30000,
               peer_connection, 7, stack_memory, &send_audio_task_buffer, 0);
