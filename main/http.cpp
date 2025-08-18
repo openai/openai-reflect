@@ -17,7 +17,7 @@ static esp_err_t post_handler(httpd_req_t *req) {
   std::vector<char> offer(SDP_BUFFER_SIZE);
   std::vector<char> answer(SDP_BUFFER_SIZE);
 
-  if (req->content_len != httpd_req_recv(req, offer.data(), SDP_BUFFER_SIZE)) {
+  if (req->content_len != httpd_req_recv(req, offer.data(), SDP_BUFFER_SIZE - 1)) {
     httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR,
                         "Failed to read POST");
     return ESP_FAIL;
