@@ -26,19 +26,21 @@ static void handle_json(char *command, size_t, void *, uint16_t) {
   cJSON *root = cJSON_Parse(command);
   if (root != NULL) {
     cJSON *event = cJSON_GetObjectItemCaseSensitive(root, "event");
-    if (strcmp("color", event->valuestring) == 0) {
-      send_lifx_set_color(
-          cJSON_GetObjectItemCaseSensitive(root, "hue")->valueint,
-          cJSON_GetObjectItemCaseSensitive(root, "saturation")->valueint,
-          cJSON_GetObjectItemCaseSensitive(root, "brightness")->valueint);
-    } else if (strcmp("waveform", event->valuestring) == 0) {
-      send_lifx_set_waveform(
-          cJSON_GetObjectItemCaseSensitive(root, "hue")->valueint,
-          cJSON_GetObjectItemCaseSensitive(root, "saturation")->valueint,
-          cJSON_GetObjectItemCaseSensitive(root, "brightness")->valueint);
-    } else if (strcmp("power", event->valuestring) == 0) {
-      send_lifx_set_power(
-          cJSON_GetObjectItemCaseSensitive(root, "power")->valueint);
+    if (event != NULL) {
+      if (strcmp("color", event->valuestring) == 0) {
+        send_lifx_set_color(
+            cJSON_GetObjectItemCaseSensitive(root, "hue")->valueint,
+            cJSON_GetObjectItemCaseSensitive(root, "saturation")->valueint,
+            cJSON_GetObjectItemCaseSensitive(root, "brightness")->valueint);
+      } else if (strcmp("waveform", event->valuestring) == 0) {
+        send_lifx_set_waveform(
+            cJSON_GetObjectItemCaseSensitive(root, "hue")->valueint,
+            cJSON_GetObjectItemCaseSensitive(root, "saturation")->valueint,
+            cJSON_GetObjectItemCaseSensitive(root, "brightness")->valueint);
+      } else if (strcmp("power", event->valuestring) == 0) {
+        send_lifx_set_power(
+            cJSON_GetObjectItemCaseSensitive(root, "power")->valueint);
+      }
     }
     cJSON_Delete(root);
   }
