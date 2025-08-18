@@ -1,4 +1,5 @@
 #include "esp_http_server.h"
+#include <vector>
 
 #define SDP_BUFFER_SIZE 5000
 
@@ -13,19 +14,17 @@ esp_err_t root_get_handler(httpd_req_t *req) {
 }
 
 static esp_err_t post_handler(httpd_req_t *req) {
-  auto offer = (char *)calloc(SDP_BUFFER_SIZE, sizeof(char));
-  auto answer = (char *)calloc(SDP_BUFFER_SIZE, sizeof(char));
+  std::vector<char> offer(SDP_BUFFER_SIZE);
+  std::vector<char> answer(SDP_BUFFER_SIZE);
 
-  if (req->content_len != httpd_req_recv(req, offer, SDP_BUFFER_SIZE)) {
+  if (req->content_len != httpd_req_recv(req, offer.data(), SDP_BUFFER_SIZE)) {
     httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR,
                         "Failed to read POST");
     return ESP_FAIL;
   }
 
-  reflect_new_peer_connection(offer, answer);
-  httpd_resp_send(req, answer, strlen(answer));
-  free(offer);
-  free(answer);
+  reflect_new_peer_connection(offer.data(), answer.data());
+  httpd_resp_send(req, answer.data(), HTTPD_RESP_USE_STRLEN);
   return ESP_OK;
 }
 

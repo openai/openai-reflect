@@ -4,7 +4,7 @@
 #include <opus.h>
 #include <peer.h>
 
-#define GAIN 10.0
+#define GAIN 5.0
 
 #define CHANNELS 1
 #define SAMPLE_RATE (16000)
