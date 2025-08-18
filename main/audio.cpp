@@ -125,6 +125,7 @@ void reflect_send_audio(PeerConnection *peer_connection) {
   auto encoded_size = opus_encode(opus_encoder, (const opus_int16 *)read_buffer,
                                   PCM_BUFFER_SIZE / sizeof(uint16_t),
                                   encoder_output_buffer, OPUS_BUFFER_SIZE);
+  assert(encoded_size > 0);
   peer_connection_send_audio(peer_connection, encoder_output_buffer,
                              encoded_size);
 }
