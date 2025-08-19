@@ -88,5 +88,5 @@ open http://192.168.4.1 to start a session.
 If you connected successfully you will see two audio elements on the page. One for Realtime API audio
 and one for audio from the device. You can unmute these audio elements to for debugging.
 
-### Device
-<video src="https://github.com/user-attachments/assets/d56fcb7a-5807-43f1-b314-070e2629bd39" autoplay loop muted> </video>
+### Video
+<video src="https://github.com/user-attachments/assets/6c7cf263-d1cd-46f0-9ecf-e04756b63cda" autoplay loop muted> </video>
