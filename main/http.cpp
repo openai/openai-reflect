@@ -14,60 +14,60 @@
 esp_err_t oai_http_event_handler(esp_http_client_event_t *evt) {
   static int output_len;
   switch (evt->event_id) {
-    case HTTP_EVENT_REDIRECT:
-      ESP_LOGD(LOG_TAG, "HTTP_EVENT_REDIRECT");
-      esp_http_client_set_header(evt->client, "From", "user@example.com");
-      esp_http_client_set_header(evt->client, "Accept", "text/html");
-      esp_http_client_set_redirection(evt->client);
-      break;
-    case HTTP_EVENT_ERROR:
-      ESP_LOGD(LOG_TAG, "HTTP_EVENT_ERROR");
-      break;
-    case HTTP_EVENT_ON_CONNECTED:
-      ESP_LOGD(LOG_TAG, "HTTP_EVENT_ON_CONNECTED");
-      break;
-    case HTTP_EVENT_HEADER_SENT:
-      ESP_LOGD(LOG_TAG, "HTTP_EVENT_HEADER_SENT");
-      break;
-    case HTTP_EVENT_ON_HEADER:
-      ESP_LOGD(LOG_TAG, "HTTP_EVENT_ON_HEADER, key=%s, value=%s",
-               evt->header_key, evt->header_value);
-      break;
-    case HTTP_EVENT_ON_DATA: {
-      ESP_LOGD(LOG_TAG, "HTTP_EVENT_ON_DATA, len=%d", evt->data_len);
-      if (esp_http_client_is_chunked_response(evt->client)) {
-        ESP_LOGE(LOG_TAG, "Chunked HTTP response not supported");
+  case HTTP_EVENT_REDIRECT:
+    ESP_LOGD(LOG_TAG, "HTTP_EVENT_REDIRECT");
+    esp_http_client_set_header(evt->client, "From", "user@example.com");
+    esp_http_client_set_header(evt->client, "Accept", "text/html");
+    esp_http_client_set_redirection(evt->client);
+    break;
+  case HTTP_EVENT_ERROR:
+    ESP_LOGD(LOG_TAG, "HTTP_EVENT_ERROR");
+    break;
+  case HTTP_EVENT_ON_CONNECTED:
+    ESP_LOGD(LOG_TAG, "HTTP_EVENT_ON_CONNECTED");
+    break;
+  case HTTP_EVENT_HEADER_SENT:
+    ESP_LOGD(LOG_TAG, "HTTP_EVENT_HEADER_SENT");
+    break;
+  case HTTP_EVENT_ON_HEADER:
+    ESP_LOGD(LOG_TAG, "HTTP_EVENT_ON_HEADER, key=%s, value=%s", evt->header_key,
+             evt->header_value);
+    break;
+  case HTTP_EVENT_ON_DATA: {
+    ESP_LOGD(LOG_TAG, "HTTP_EVENT_ON_DATA, len=%d", evt->data_len);
+    if (esp_http_client_is_chunked_response(evt->client)) {
+      ESP_LOGE(LOG_TAG, "Chunked HTTP response not supported");
 #ifndef LINUX_BUILD
-        esp_restart();
+      esp_restart();
 #endif
-      }
-
-      if (output_len == 0 && evt->user_data) {
-        memset(evt->user_data, 0, SDP_BUFFER_SIZE);
-      }
-
-      // If user_data buffer is configured, copy the response into the buffer
-      int copy_len = 0;
-      if (evt->user_data) {
-        // The last byte in evt->user_data is kept for the NULL character in
-        // case of out-of-bound access.
-        copy_len = MIN(evt->data_len, (SDP_BUFFER_SIZE - output_len));
-        if (copy_len) {
-          memcpy(((char *)evt->user_data) + output_len, evt->data, copy_len);
-        }
-      }
-      output_len += copy_len;
-
-      break;
     }
-    case HTTP_EVENT_ON_FINISH:
-      ESP_LOGD(LOG_TAG, "HTTP_EVENT_ON_FINISH");
-      output_len = 0;
-      break;
-    case HTTP_EVENT_DISCONNECTED:
-      ESP_LOGI(LOG_TAG, "HTTP_EVENT_DISCONNECTED");
-      output_len = 0;
-      break;
+
+    if (output_len == 0 && evt->user_data) {
+      memset(evt->user_data, 0, SDP_BUFFER_SIZE);
+    }
+
+    // If user_data buffer is configured, copy the response into the buffer
+    int copy_len = 0;
+    if (evt->user_data) {
+      // The last byte in evt->user_data is kept for the NULL character in
+      // case of out-of-bound access.
+      copy_len = MIN(evt->data_len, (SDP_BUFFER_SIZE - output_len));
+      if (copy_len) {
+        memcpy(((char *)evt->user_data) + output_len, evt->data, copy_len);
+      }
+    }
+    output_len += copy_len;
+
+    break;
+  }
+  case HTTP_EVENT_ON_FINISH:
+    ESP_LOGD(LOG_TAG, "HTTP_EVENT_ON_FINISH");
+    output_len = 0;
+    break;
+  case HTTP_EVENT_DISCONNECTED:
+    ESP_LOGI(LOG_TAG, "HTTP_EVENT_DISCONNECTED");
+    output_len = 0;
+    break;
   }
   return ESP_OK;
 }

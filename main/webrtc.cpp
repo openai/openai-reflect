@@ -10,8 +10,7 @@
 #define TICK_INTERVAL 15
 PeerConnection *peer_connection = NULL;
 
-static void on_datachannel_message(char *, size_t, void *, uint16_t) {
-}
+static void on_datachannel_message(char *, size_t, void *, uint16_t) {}
 
 StaticTask_t send_audio_task_buffer;
 void reflect_send_audio_task(void *user_data) {
@@ -57,7 +56,8 @@ void reflect_new_peer_connection() {
               peer_connection, 7, stack_memory, &send_audio_task_buffer, 0);
         }
       });
-  peer_connection_ondatachannel(peer_connection, on_datachannel_message, [](void *) -> void {}, NULL);
+  peer_connection_ondatachannel(
+      peer_connection, on_datachannel_message, [](void *) -> void {}, NULL);
 }
 
 void reflect_peer_connection_loop() {
@@ -68,7 +68,8 @@ void reflect_peer_connection_loop() {
   auto answer = (char *)calloc(SDP_BUFFER_SIZE, sizeof(char));
 
   oai_http_request(offer, answer);
-  peer_connection_set_remote_description(peer_connection, answer, SDP_TYPE_ANSWER);
+  peer_connection_set_remote_description(peer_connection, answer,
+                                         SDP_TYPE_ANSWER);
 
   reflect_set_spin(true);
   send_lifx_set_power(true);
