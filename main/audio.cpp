@@ -98,8 +98,8 @@ void apply_gain(int16_t *samples) {
 }
 
 void reflect_play_audio(uint8_t *data, size_t size) {
-  auto decoded_size =
-      opus_decode(opus_decoder, data, size, decoder_buffer, PCM_BUFFER_SIZE / sizeof(uint16_t), 0);
+  auto decoded_size = opus_decode(opus_decoder, data, size, decoder_buffer,
+                                  PCM_BUFFER_SIZE / sizeof(uint16_t), 0);
 
   if (reflect_display_pressed()) {
     memset(decoder_buffer, 0, PCM_BUFFER_SIZE);

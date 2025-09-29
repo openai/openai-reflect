@@ -83,7 +83,8 @@ void reflect_new_peer_connection(char *offer, char *answer) {
               peer_connection, 7, stack_memory, &send_audio_task_buffer, 0);
         }
       });
-  peer_connection_set_remote_description(peer_connection, offer, SDP_TYPE_OFFER);
+  peer_connection_set_remote_description(peer_connection, offer,
+                                         SDP_TYPE_OFFER);
   peer_connection_ondatachannel(
       peer_connection, on_datachannel_message, [](void *) -> void {}, NULL);
 
