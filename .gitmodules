@@ -1,0 +1,3 @@
+[submodule "deps/libpeer"]
+	path = deps/libpeer
+	url = https://github.com/sepfy/libpeer.git

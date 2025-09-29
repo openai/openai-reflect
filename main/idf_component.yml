@@ -1,4 +1,4 @@
 dependencies:
   espressif/m5stack_core_s3: ^3.0.0~3
-  sepfy/libpeer: ^0.0.3
   78/esp-opus: ^1.0.5
+  sepfy/srtp: ^2.3.0

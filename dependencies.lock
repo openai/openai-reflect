@@ -92,11 +92,11 @@ dependencies:
       type: service
     version: 1.0.7
   espressif/esp_lvgl_port:
-    component_hash: e720c95cf0667554a204591bb5fade4655fb2990465557041200fa44b5bc7556
+    component_hash: bfb2778c063b05a6c47c1a8de6d166ee4d911bc86fe0b3ff9e6bab06d2812033
     dependencies:
     - name: idf
       require: private
-      version: '>=4.4'
+      version: '>=5.1'
     - name: lvgl/lvgl
       registry_url: https://components.espressif.com
       require: public
@@ -104,7 +104,7 @@ dependencies:
     source:
       registry_url: https://components.espressif.com
       type: service
-    version: 2.6.0
+    version: 2.6.2
   espressif/m5stack_core_s3:
     component_hash: 4ff495d0a0061c208d21ddaabdab498285ee9d3d533044ab386977680fe1aba9
     dependencies:
@@ -140,7 +140,7 @@ dependencies:
   idf:
     source:
       type: idf
-    version: 5.5.0
+    version: 5.5.1
   lvgl/lvgl:
     component_hash: b702d642e03e95928046d5c6726558e6444e112420c77efa5fdb6650b0a13c5d
     dependencies: []
@@ -148,39 +148,17 @@ dependencies:
       registry_url: https://components.espressif.com
       type: service
     version: 9.3.0
-  sepfy/libpeer:
-    component_hash: 35a1f515f0cdd21473a00cfed56dc475f54be0046c54f4410c034906a708d772
-    dependencies:
-    - name: sepfy/srtp
-      registry_url: https://components.espressif.com
-      require: private
-      version: ^2.0.4
-    - name: sepfy/usrsctp
-      registry_url: https://components.espressif.com
-      require: private
-      version: ^0.9.5
-    source:
-      registry_url: https://components.espressif.com/
-      type: service
-    version: 0.0.3
   sepfy/srtp:
     component_hash: 5a75f043e29104975e3a0191e404a957a4d9088551842e16426a5b72e14610ae
     dependencies: []
     source:
-      registry_url: https://components.espressif.com
+      registry_url: https://components.espressif.com/
       type: service
     version: 2.3.0
-  sepfy/usrsctp:
-    component_hash: e96106dd3dbb4c1da7340a7cf044a2191bb28e706586fc20d25c08d75700583b
-    dependencies: []
-    source:
-      registry_url: https://components.espressif.com
-      type: service
-    version: 0.9.5
 direct_dependencies:
 - 78/esp-opus
 - espressif/m5stack_core_s3
-- sepfy/libpeer
-manifest_hash: 79b97287e0bc64eb1d9ae12a26db135653e78f943bf3984a9cb17aa2d05dc726
+- sepfy/srtp
+manifest_hash: b0b27b00f605153b18e0ed266bf7b8e6f50ee4447973ed3d9f5a4f8dad6fd5b7
 target: esp32s3
 version: 2.0.0

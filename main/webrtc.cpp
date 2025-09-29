@@ -14,7 +14,7 @@ static void onicecandidate_task(char *description, void *user_data) {
   strncpy((char *)user_data, description, SDP_BUFFER_SIZE - 1);
 }
 
-static void handle_json(char *command, size_t, void *, uint16_t) {
+static void on_datachannel_message(char *command, size_t, void *, uint16_t) {
   cJSON *root = cJSON_Parse(command);
   if (root != NULL) {
     cJSON *event = cJSON_GetObjectItemCaseSensitive(root, "event");
@@ -83,9 +83,9 @@ void reflect_new_peer_connection(char *offer, char *answer) {
               peer_connection, 7, stack_memory, &send_audio_task_buffer, 0);
         }
       });
-  peer_connection_set_remote_description(peer_connection, offer);
+  peer_connection_set_remote_description(peer_connection, offer, SDP_TYPE_OFFER);
   peer_connection_ondatachannel(
-      peer_connection, handle_json, [](void *) -> void {}, NULL);
+      peer_connection, on_datachannel_message, [](void *) -> void {}, NULL);
 
   while (strlen(answer) == 0) {
     vTaskDelay(pdMS_TO_TICKS(TICK_INTERVAL));
