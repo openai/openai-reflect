@@ -18,4 +18,11 @@ menu "Reflect Configuration"
         help
             Enter your OpenAI API Key
 
+    config OPENAI_REALTIME_API_URL
+        string "OpenAI Realtime API URL"
+        default "https://api.openai.com/v1/realtime/calls?model=gpt-realtime"
+        help
+            Enter the OpenAI Realtime API Url
+
+
 endmenu

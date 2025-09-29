@@ -1,13 +1,12 @@
 #pragma once
 #include <peer.h>
 
-#define SDP_BUFFER_SIZE 5000
+#define SDP_BUFFER_SIZE 4096
 
 bool reflect_display_pressed(void);
 void reflect_audio();
 void reflect_display();
 void reflect_lifx();
-void reflect_new_peer_connection(char *offer, char *answer);
 void reflect_peer_connection_loop();
 void reflect_play_audio(uint8_t *, size_t);
 void reflect_send_audio(PeerConnection *);
@@ -16,3 +15,5 @@ void reflect_wifi();
 void send_lifx_set_color(uint16_t, uint16_t, uint16_t);
 void send_lifx_set_power(int);
 void send_lifx_set_waveform(uint16_t, uint16_t, uint16_t);
+void oai_http_request(const char *offer, char *answer);
+

@@ -10,32 +10,7 @@
 #define TICK_INTERVAL 15
 PeerConnection *peer_connection = NULL;
 
-static void onicecandidate_task(char *description, void *user_data) {
-  strncpy((char *)user_data, description, SDP_BUFFER_SIZE - 1);
-}
-
-static void on_datachannel_message(char *command, size_t, void *, uint16_t) {
-  cJSON *root = cJSON_Parse(command);
-  if (root != NULL) {
-    cJSON *event = cJSON_GetObjectItemCaseSensitive(root, "event");
-    if (event != NULL) {
-      if (strcmp("color", event->valuestring) == 0) {
-        send_lifx_set_color(
-            cJSON_GetObjectItemCaseSensitive(root, "hue")->valueint,
-            cJSON_GetObjectItemCaseSensitive(root, "saturation")->valueint,
-            cJSON_GetObjectItemCaseSensitive(root, "brightness")->valueint);
-      } else if (strcmp("waveform", event->valuestring) == 0) {
-        send_lifx_set_waveform(
-            cJSON_GetObjectItemCaseSensitive(root, "hue")->valueint,
-            cJSON_GetObjectItemCaseSensitive(root, "saturation")->valueint,
-            cJSON_GetObjectItemCaseSensitive(root, "brightness")->valueint);
-      } else if (strcmp("power", event->valuestring) == 0) {
-        send_lifx_set_power(
-            cJSON_GetObjectItemCaseSensitive(root, "power")->valueint);
-      }
-    }
-    cJSON_Delete(root);
-  }
+static void on_datachannel_message(char *, size_t, void *, uint16_t) {
 }
 
 StaticTask_t send_audio_task_buffer;
@@ -54,7 +29,7 @@ void reflect_send_audio_task(void *user_data) {
   }
 }
 
-void reflect_new_peer_connection(char *offer, char *answer) {
+void reflect_new_peer_connection() {
   PeerConfiguration peer_connection_config = {
       .ice_servers = {},
       .audio_codec = CODEC_OPUS,
@@ -65,13 +40,12 @@ void reflect_new_peer_connection(char *offer, char *answer) {
       },
       .onvideotrack = NULL,
       .on_request_keyframe = NULL,
-      .user_data = answer,
+      .user_data = NULL,
   };
 
   peer_connection = peer_connection_create(&peer_connection_config);
   assert(peer_connection != NULL);
 
-  peer_connection_onicecandidate(peer_connection, onicecandidate_task);
   peer_connection_oniceconnectionstatechange(
       peer_connection, [](PeerConnectionState state, void *user_data) -> void {
         if (state == PEER_CONNECTION_CONNECTED) {
@@ -83,29 +57,24 @@ void reflect_new_peer_connection(char *offer, char *answer) {
               peer_connection, 7, stack_memory, &send_audio_task_buffer, 0);
         }
       });
-  peer_connection_set_remote_description(peer_connection, offer,
-                                         SDP_TYPE_OFFER);
-  peer_connection_ondatachannel(
-      peer_connection, on_datachannel_message, [](void *) -> void {}, NULL);
-
-  while (strlen(answer) == 0) {
-    vTaskDelay(pdMS_TO_TICKS(TICK_INTERVAL));
-  }
+  peer_connection_ondatachannel(peer_connection, on_datachannel_message, [](void *) -> void {}, NULL);
 }
 
 void reflect_peer_connection_loop() {
   peer_init();
+  reflect_new_peer_connection();
 
-  for (uint32_t i = 0;; i++) {
-    if (peer_connection != nullptr) {
-      peer_connection_loop(peer_connection);
-    }
+  auto offer = peer_connection_create_offer(peer_connection);
+  auto answer = (char *)calloc(SDP_BUFFER_SIZE, sizeof(char));
 
-    if ((i % 3000) == 0) {
-      send_lifx_set_power(peer_connection != nullptr);
-      reflect_set_spin(peer_connection != nullptr);
-    }
+  oai_http_request(offer, answer);
+  peer_connection_set_remote_description(peer_connection, answer, SDP_TYPE_ANSWER);
 
+  reflect_set_spin(true);
+  send_lifx_set_power(true);
+
+  while (true) {
+    peer_connection_loop(peer_connection);
     vTaskDelay(pdMS_TO_TICKS(1));
   }
 }
