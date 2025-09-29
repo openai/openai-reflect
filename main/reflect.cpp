@@ -16,6 +16,5 @@ extern "C" void app_main(void) {
   reflect_audio();
   reflect_wifi();
   reflect_lifx();
-  reflect_http();
   reflect_peer_connection_loop();
 }

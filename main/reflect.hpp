@@ -6,7 +6,6 @@
 bool reflect_display_pressed(void);
 void reflect_audio();
 void reflect_display();
-void reflect_http();
 void reflect_lifx();
 void reflect_new_peer_connection(char *offer, char *answer);
 void reflect_peer_connection_loop();

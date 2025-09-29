@@ -3,9 +3,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 file(GLOB SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp")
 
 idf_component_register(SRCS ${SOURCES}
-                       PRIV_REQUIRES spi_flash nvs_flash esp_wifi esp_http_server esp_lcd_touch peer
-                       INCLUDE_DIRS "."
-                       EMBED_TXTFILES "index.html")
+                       PRIV_REQUIRES spi_flash nvs_flash esp_wifi esp_lcd_touch peer
+                       INCLUDE_DIRS ".")
 
 idf_component_get_property(lib sepfy__srtp COMPONENT_LIB)
 target_compile_options(${lib} PRIVATE -Wno-error=incompatible-pointer-types)
