@@ -1,0 +1,21 @@
+menu "Reflect Configuration"
+
+    config WIFI_NAME
+        string "WiFi Name"
+        default ""
+        help
+            Enter your Wifi network name
+
+    config WIFI_PASSWORD
+        string "WiFi Password"
+        default ""
+        help
+            Enter your Wifi network password
+
+    config OPENAI_API_KEY
+        string "OpenAI API Key"
+        default ""
+        help
+            Enter your OpenAI API Key
+
+endmenu
