@@ -162,5 +162,6 @@ void reflect_lifx() {
     return;
   }
 
+  send_lifx_set_power(false);
   inet_pton(AF_INET, BROADCAST_IP, &lifx_addr.sin_addr);
 }

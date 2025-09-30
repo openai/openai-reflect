@@ -61,6 +61,7 @@ void reflect_new_peer_connection() {
 }
 
 void reflect_peer_connection_loop() {
+  vTaskPrioritySet(xTaskGetCurrentTaskHandle(), 10);
   peer_init();
   reflect_new_peer_connection();
 
