@@ -70,7 +70,7 @@ void send_lifx_pkt(void *pkt, int size) {
 }
 
 void send_lifx_set_color(uint16_t hue, uint16_t saturation,
-                         uint16_t brightness) {
+                         uint16_t brightness, uint16_t kelvin, uint32_t duration) {
   lifx_set_color_t pkt;
   memset(&pkt, 0, sizeof(pkt));
 
@@ -88,8 +88,8 @@ void send_lifx_set_color(uint16_t hue, uint16_t saturation,
   pkt.hue = hue;
   pkt.saturation = saturation;
   pkt.brightness = brightness;
-  pkt.kelvin = 3500;
-  pkt.duration = 500;
+  pkt.kelvin = kelvin;
+  pkt.duration = duration;
 
   send_lifx_pkt(&pkt, sizeof(pkt));
 }
