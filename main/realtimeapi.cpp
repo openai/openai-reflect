@@ -45,13 +45,13 @@ If a request is ambiguous (e.g., “relax” at noon vs. midnight), ask **one br
 
 # EXAMPLES
 User: “Cozy reading nook.”
-→ `lifx_lan.set_color {kelvin:2200, brightness:0.30, duration_ms:1500}`
+→ `set_color {kelvin:2200, brightness:300, duration_ms:1500}`
 → Say: “Cozy warm white.”
 → Status: `COZY · 2200K` / `30%`
 
 User: “One gentle sign flicker, then hold.”
-→ `lifx_lan.set_waveform {waveform:"PULSE", period_ms:1600, cycles:1, transient:true, h:magenta…}`
-→ `lifx_lan.set_color {...steady…}`
+→ `set_waveform {waveform:"PULSE", period_ms:1600, cycles:1, transient:true, h:magenta…}`
+→ `set_color {...steady…}`
 → Say: “Done.”
 → Status: `PULSE · 1×` / `STEADY`
 )";
@@ -88,8 +88,7 @@ void add_set_light_power(cJSON *tools) {
   assert(tool != nullptr);
 
   assert(cJSON_AddStringToObject(tool, "type", "function") != nullptr);
-  assert(cJSON_AddStringToObject(tool, "name", "lifx_lan.set_light_power") !=
-         nullptr);
+  assert(cJSON_AddStringToObject(tool, "name", "set_light_power") != nullptr);
   assert(cJSON_AddStringToObject(
              tool, "description",
              "LAN SetLightPower (117). Turn on/off with optional fade.") !=
@@ -122,8 +121,7 @@ void add_set_color(cJSON *tools) {
   assert(tool != nullptr);
 
   assert(cJSON_AddStringToObject(tool, "type", "function") != nullptr);
-  assert(cJSON_AddStringToObject(tool, "name", "lifx_lan.set_color") !=
-         nullptr);
+  assert(cJSON_AddStringToObject(tool, "name", "set_color") != nullptr);
   assert(cJSON_AddStringToObject(
              tool, "description",
              "LAN SetColor (102). Set HSBK for whole device.") != nullptr);
@@ -179,43 +177,68 @@ void send_session_update(PeerConnection *peer_connection) {
 }
 
 void realtimeapi_parse_incoming(char *msg) {
+  // Large inbound messages get chunked (and fail to parse)
   auto root = cJSON_Parse(msg);
-  assert(root != NULL);
+  if (root == nullptr) {
+    return;
+  }
 
   auto type_item = cJSON_GetObjectItem(root, "type");
   assert(cJSON_IsString(type_item));
-  auto type = type_item->valuestring;
 
-  if (strcmp(type, "response.output") != 0) {
+  if (strcmp(type_item->valuestring, "response.function_call_arguments.done") !=
+      0) {
     return;
   }
 
-  auto output = cJSON_GetObjectItem(root, "output");
-  assert(cJSON_IsObject(output));
+  auto argsString = cJSON_GetObjectItem(root, "arguments");
+  assert(cJSON_IsString(argsString));
 
-  auto output_type_item = cJSON_GetObjectItem(output, "type");
-  assert(cJSON_IsString(output_type_item));
-  auto output_type = output_type_item->valuestring;
-  if (strcmp(output_type, "function_call") != 0) {
-    return;
-  }
-
-  auto output_name_item = cJSON_GetObjectItem(output, "name");
-  assert(cJSON_IsString(output_name_item));
-  auto output_name = output_name_item->valuestring;
-
-  auto args = cJSON_GetObjectItem(output, "arguments");
+  auto args = cJSON_Parse(argsString->valuestring);
   assert(cJSON_IsObject(args));
 
-  auto hue = cJSON_GetObjectItem(args, "hue")->valueint;
-  auto saturation = cJSON_GetObjectItem(args, "saturation")->valueint;
-  auto brightness = cJSON_GetObjectItem(args, "brightness")->valueint;
-  auto kelvin = cJSON_GetObjectItem(args, "kelvin")->valueint;
-  auto duration = cJSON_GetObjectItem(args, "duration")->valueint;
+  uint16_t hue = 0;
+  uint16_t saturation = 0;
+  uint16_t brightness = 0;
+  uint16_t kelvin = 0;
+  uint32_t duration = 0;
 
-  if (strcmp(output_name, "lifx_lan.set_color") == 0) {
+  auto hueObj = cJSON_GetObjectItem(args, "hue");
+  if (hueObj != nullptr) {
+    hue = hueObj->valueint;
+  }
+
+  auto saturationObj = cJSON_GetObjectItem(args, "saturation");
+  if (saturationObj != nullptr) {
+    saturation = saturationObj->valueint;
+  }
+
+  auto brightnessObj = cJSON_GetObjectItem(args, "brightness");
+  if (brightnessObj != nullptr) {
+    brightness = brightnessObj->valueint;
+  }
+
+  auto kelvinObj = cJSON_GetObjectItem(args, "kelvin");
+  if (kelvinObj != nullptr) {
+    kelvin = kelvinObj->valueint;
+  }
+
+  auto durationObj = cJSON_GetObjectItem(args, "duration");
+  if (durationObj != nullptr) {
+    duration = durationObj->valueint;
+  }
+
+  auto output_name_item = cJSON_GetObjectItem(root, "name");
+  assert(cJSON_IsString(output_name_item));
+
+  if (strcmp(output_name_item->valuestring, "set_color") == 0) {
+    ESP_LOGI(LOG_TAG,
+             "set_color hue(%d) saturation(%d) brightness(%d) kelvin(%d) "
+             "duration(%d)",
+             hue, saturation, brightness, kelvin, duration);
     send_lifx_set_color(hue, saturation, brightness, kelvin, duration);
   }
 
+  cJSON_Delete(args);
   cJSON_Delete(root);
 }

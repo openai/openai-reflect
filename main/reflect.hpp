@@ -22,4 +22,5 @@ void send_lifx_set_waveform(bool, uint16_t, uint16_t, uint16_t, uint16_t,
 
 void oai_http_request(const char *offer, char *answer);
 
+void realtimeapi_parse_incoming(char *);
 void send_session_update(PeerConnection *peer_connection);

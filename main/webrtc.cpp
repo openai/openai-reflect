@@ -11,8 +11,9 @@
 PeerConnection *peer_connection = NULL;
 
 static void on_datachannel_message(char *msg, size_t, void *, uint16_t) {
-  ESP_LOGI(LOG_TAG, "DataChannel Message: %s", msg);
+  realtimeapi_parse_incoming(msg);
 }
+
 static void on_datachannel_onopen(void *userdata) {
   if (peer_connection_create_datachannel(peer_connection, DATA_CHANNEL_RELIABLE,
                                          0, 0, (char *)"oai-events",
