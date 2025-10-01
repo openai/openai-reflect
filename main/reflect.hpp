@@ -17,7 +17,8 @@ void reflect_wifi();
 
 void send_lifx_set_color(uint16_t, uint16_t, uint16_t, uint16_t, uint32_t);
 void send_lifx_set_power(int);
-void send_lifx_set_waveform(uint16_t, uint16_t, uint16_t);
+void send_lifx_set_waveform(bool, uint16_t, uint16_t, uint16_t, uint16_t,
+                            uint32_t, float, int16_t, uint8_t);
 
 void oai_http_request(const char *offer, char *answer);
 

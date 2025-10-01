@@ -1,6 +1,6 @@
 #include "cJSON.h"
-#include <vector>
 #include <string>
+#include <vector>
 
 #include "reflect.hpp"
 
@@ -56,8 +56,9 @@ User: “One gentle sign flicker, then hold.”
 → Status: `PULSE · 1×` / `STEADY`
 )";
 
-void set_required_parameters(cJSON *parameters, std::vector<std::string> params) {
-  cJSON* required = cJSON_AddArrayToObject(parameters, "required");
+void set_required_parameters(cJSON *parameters,
+                             std::vector<std::string> params) {
+  cJSON *required = cJSON_AddArrayToObject(parameters, "required");
   assert(required != nullptr);
 
   for (auto param : params) {
@@ -68,12 +69,15 @@ void set_required_parameters(cJSON *parameters, std::vector<std::string> params)
   }
 }
 
-void add_duration_parameter(cJSON* properties, std::string description, int defaultValue, int minimum, int maximum) {
-  cJSON* duration = cJSON_AddObjectToObject(properties, "duration");
+void add_duration_parameter(cJSON *properties, std::string name,
+                            std::string description, int defaultValue,
+                            int minimum, int maximum) {
+  cJSON *duration = cJSON_AddObjectToObject(properties, name.c_str());
   assert(duration != nullptr);
 
   assert(cJSON_AddStringToObject(duration, "type", "number") != nullptr);
-  assert(cJSON_AddStringToObject(duration, "description", description.c_str()) != nullptr);
+  assert(cJSON_AddStringToObject(duration, "description",
+                                 description.c_str()) != nullptr);
   assert(cJSON_AddNumberToObject(duration, "default", defaultValue) != nullptr);
   assert(cJSON_AddNumberToObject(duration, "minimum", minimum) != nullptr);
   assert(cJSON_AddNumberToObject(duration, "default", maximum) != nullptr);
@@ -84,8 +88,12 @@ void add_set_light_power(cJSON *tools) {
   assert(tool != nullptr);
 
   assert(cJSON_AddStringToObject(tool, "type", "function") != nullptr);
-  assert(cJSON_AddStringToObject(tool, "name", "lifx_lan.set_light_power") != nullptr);
-  assert(cJSON_AddStringToObject(tool, "description", "LAN SetLightPower (117). Turn on/off with optional fade.") != nullptr);
+  assert(cJSON_AddStringToObject(tool, "name", "lifx_lan.set_light_power") !=
+         nullptr);
+  assert(cJSON_AddStringToObject(
+             tool, "description",
+             "LAN SetLightPower (117). Turn on/off with optional fade.") !=
+         nullptr);
 
   auto parameters = cJSON_CreateObject();
   assert(parameters != nullptr);
@@ -98,11 +106,45 @@ void add_set_light_power(cJSON *tools) {
   auto on = cJSON_AddObjectToObject(properties, "on");
   assert(on != nullptr);
   assert(cJSON_AddStringToObject(on, "type", "boolean") != nullptr);
-  assert(cJSON_AddStringToObject(on, "description", "true=on, false=off") != nullptr);
+  assert(cJSON_AddStringToObject(on, "description", "true=on, false=off") !=
+         nullptr);
 
-  add_duration_parameter(properties, "duration of transition in milliseconds", 0, 0, 1000);
+  add_duration_parameter(properties, "duration",
+                         "duration of transition in milliseconds", 0, 0, 1000);
 
-  set_required_parameters(parameters, std::vector<std::string>{"on", "duration"});
+  set_required_parameters(parameters,
+                          std::vector<std::string>{"on", "duration"});
+  assert(cJSON_AddItemToArray(tools, tool));
+}
+
+void add_set_color(cJSON *tools) {
+  auto tool = cJSON_CreateObject();
+  assert(tool != nullptr);
+
+  assert(cJSON_AddStringToObject(tool, "type", "function") != nullptr);
+  assert(cJSON_AddStringToObject(tool, "name", "lifx_lan.set_color") !=
+         nullptr);
+  assert(cJSON_AddStringToObject(
+             tool, "description",
+             "LAN SetColor (102). Set HSBK for whole device.") != nullptr);
+
+  auto parameters = cJSON_CreateObject();
+  assert(parameters != nullptr);
+  assert(cJSON_AddItemToObject(tool, "parameters", parameters));
+  assert(cJSON_AddStringToObject(parameters, "type", "object") != nullptr);
+
+  auto properties = cJSON_AddObjectToObject(parameters, "properties");
+  assert(properties != nullptr);
+
+  add_duration_parameter(properties, "hue", "", 0, 0, 65535);
+  add_duration_parameter(properties, "saturation", "", 0, 0, 65535);
+  add_duration_parameter(properties, "brightness", "", 0, 0, 65535);
+  add_duration_parameter(properties, "kelvin", "", 0, 0, 65535);
+  add_duration_parameter(properties, "duration", "", 0, 0, 4294967295);
+
+  set_required_parameters(
+      parameters, std::vector<std::string>{"hue", "saturation", "brightness",
+                                           "kelvin", "duration"});
   assert(cJSON_AddItemToArray(tools, tool));
 }
 
@@ -115,13 +157,15 @@ void send_session_update(PeerConnection *peer_connection) {
   auto session = cJSON_CreateObject();
   assert(session != nullptr);
 
-  assert(cJSON_AddStringToObject(session, "instructions", kLunaInstructions) != nullptr);
+  assert(cJSON_AddStringToObject(session, "instructions", kLunaInstructions) !=
+         nullptr);
   assert(cJSON_AddStringToObject(session, "type", "realtime") != nullptr);
 
   auto tools = cJSON_AddArrayToObject(session, "tools");
   assert(tools != nullptr);
 
   add_set_light_power(tools);
+  add_set_color(tools);
 
   assert(cJSON_AddItemToObject(root, "session", session));
 

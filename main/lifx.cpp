@@ -94,8 +94,10 @@ void send_lifx_set_color(uint16_t hue, uint16_t saturation, uint16_t brightness,
   send_lifx_pkt(&pkt, sizeof(pkt));
 }
 
-void send_lifx_set_waveform(uint16_t hue, uint16_t saturation,
-                            uint16_t brightness) {
+void send_lifx_set_waveform(bool transient, uint16_t hue, uint16_t saturation,
+                            uint16_t brightness, uint16_t kelvin,
+                            uint32_t period, float cycles, int16_t skew_ratio,
+                            uint8_t waveform) {
   lifx_set_waveform_t pkt;
   memset(&pkt, 0, sizeof(pkt));
 
@@ -113,15 +115,15 @@ void send_lifx_set_waveform(uint16_t hue, uint16_t saturation,
   pkt.header.type = 103;
 
   pkt.reserved6 = 0;
-  pkt.transient = 1;
+  pkt.transient = transient;
   pkt.hue = hue;
   pkt.saturation = saturation;
   pkt.brightness = brightness;
-  pkt.kelvin = 4000;
-  pkt.period = 5000;
-  pkt.cycles = 65535.0f;
-  pkt.skew_ratio = 0;
-  pkt.waveform = 1;
+  pkt.kelvin = kelvin;
+  pkt.period = period;
+  pkt.cycles = cycles;
+  pkt.skew_ratio = skew_ratio;
+  pkt.waveform = waveform;
 
   send_lifx_pkt(&pkt, sizeof(pkt));
 }
