@@ -186,7 +186,7 @@ void realtimeapi_parse_incoming(char *msg) {
   assert(cJSON_IsString(type_item));
   auto type = type_item->valuestring;
 
-  if (strcmp(type, "response.output") == 0) {
+  if (strcmp(type, "response.output") != 0) {
     return;
   }
 
@@ -196,7 +196,7 @@ void realtimeapi_parse_incoming(char *msg) {
   auto output_type_item = cJSON_GetObjectItem(output, "type");
   assert(cJSON_IsString(output_type_item));
   auto output_type = output_type_item->valuestring;
-  if (strcmp(output_type, "function_call") == 0) {
+  if (strcmp(output_type, "function_call") != 0) {
     return;
   }
 
