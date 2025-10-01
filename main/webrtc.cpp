@@ -14,7 +14,9 @@ static void on_datachannel_message(char *msg, size_t, void *, uint16_t) {
   ESP_LOGI(LOG_TAG, "DataChannel Message: %s", msg);
 }
 static void on_datachannel_onopen(void *userdata) {
-  if (peer_connection_create_datachannel(peer_connection, DATA_CHANNEL_RELIABLE, 0, 0, (char *)"oai-events", (char *)"") != -1) {
+  if (peer_connection_create_datachannel(peer_connection, DATA_CHANNEL_RELIABLE,
+                                         0, 0, (char *)"oai-events",
+                                         (char *)"") != -1) {
     ESP_LOGI(LOG_TAG, "DataChannel Open");
     send_session_update(peer_connection);
   } else {
@@ -66,7 +68,8 @@ void reflect_new_peer_connection() {
               peer_connection, 7, stack_memory, &send_audio_task_buffer, 0);
         }
       });
-  peer_connection_ondatachannel(peer_connection, on_datachannel_message, on_datachannel_onopen, NULL);
+  peer_connection_ondatachannel(peer_connection, on_datachannel_message,
+                                on_datachannel_onopen, NULL);
 }
 
 void reflect_peer_connection_loop() {

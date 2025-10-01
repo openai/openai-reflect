@@ -54,35 +54,33 @@ User: “One gentle sign flicker, then hold.”
 → Status: `PULSE · 1×` / `STEADY`
 )";
 
-void add_set_light_power(cJSON* tools) {
-}
-
+void add_set_light_power(cJSON *tools) {}
 
 void send_session_update(PeerConnection *peer_connection) {
-    auto root = cJSON_CreateObject();
-    assert(root != nullptr);
+  auto root = cJSON_CreateObject();
+  assert(root != nullptr);
 
-    assert(cJSON_AddStringToObject(root, "type", "session.update") != nullptr);
+  assert(cJSON_AddStringToObject(root, "type", "session.update") != nullptr);
 
-    auto session = cJSON_CreateObject();
-    assert(session != nullptr);
+  auto session = cJSON_CreateObject();
+  assert(session != nullptr);
 
-    assert(cJSON_AddStringToObject(session, "instructions", kLunaInstructions) != nullptr);
-    assert(cJSON_AddStringToObject(session, "type", "realtime") != nullptr);
+  assert(cJSON_AddStringToObject(session, "instructions", kLunaInstructions) !=
+         nullptr);
+  assert(cJSON_AddStringToObject(session, "type", "realtime") != nullptr);
 
-    auto tools = cJSON_AddArrayToObject(session, "tools");
-    assert(tools != nullptr);
+  auto tools = cJSON_AddArrayToObject(session, "tools");
+  assert(tools != nullptr);
 
-    add_set_light_power(tools);
+  add_set_light_power(tools);
 
-    assert(cJSON_AddItemToObject(root, "session", session) != nullptr);
+  assert(cJSON_AddItemToObject(root, "session", session));
 
-    auto serialized = cJSON_PrintUnformatted(root);
-    assert(serialized != nullptr);
+  auto serialized = cJSON_PrintUnformatted(root);
+  assert(serialized != nullptr);
 
-    peer_connection_datachannel_send(peer_connection, serialized, strlen(serialized));
-    cJSON_free(serialized);
-    cJSON_Delete(root);
-
+  peer_connection_datachannel_send(peer_connection, serialized,
+                                   strlen(serialized));
+  cJSON_free(serialized);
+  cJSON_Delete(root);
 }
-
