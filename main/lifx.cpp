@@ -128,7 +128,7 @@ void send_lifx_set_waveform(bool transient, uint16_t hue, uint16_t saturation,
   send_lifx_pkt(&pkt, sizeof(pkt));
 }
 
-void send_lifx_set_power(int on) {
+void send_lifx_set_power(int on, uint32_t duration) {
   lifx_set_power_t pkt;
   memset(&pkt, 0, sizeof(pkt));
 
@@ -145,7 +145,7 @@ void send_lifx_set_power(int on) {
   pkt.header.at_time = 0;
   pkt.header.type = 21;
   pkt.level = on ? 65535 : 0;
-  pkt.duration = 5000;
+  pkt.duration = duration;
 
   send_lifx_pkt(&pkt, sizeof(pkt));
 }
@@ -165,5 +165,5 @@ void reflect_lifx() {
   }
 
   inet_pton(AF_INET, BROADCAST_IP, &lifx_addr.sin_addr);
-  send_lifx_set_power(false);
+  send_lifx_set_power(false, 5000);
 }

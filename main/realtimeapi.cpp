@@ -204,6 +204,7 @@ void realtimeapi_parse_incoming(char *msg) {
   uint16_t brightness = 0;
   uint16_t kelvin = 0;
   uint32_t duration = 0;
+  bool on = false;
 
   auto hueObj = cJSON_GetObjectItem(args, "hue");
   if (hueObj != nullptr) {
@@ -230,6 +231,11 @@ void realtimeapi_parse_incoming(char *msg) {
     duration = durationObj->valueint;
   }
 
+  auto onObj = cJSON_GetObjectItem(args, "on");
+  if (onObj != nullptr) {
+    on = onObj->type == cJSON_True;
+  }
+
   auto output_name_item = cJSON_GetObjectItem(root, "name");
   assert(cJSON_IsString(output_name_item));
 
@@ -239,6 +245,9 @@ void realtimeapi_parse_incoming(char *msg) {
              "duration(%d)",
              hue, saturation, brightness, kelvin, duration);
     send_lifx_set_color(hue, saturation, brightness, kelvin, duration);
+  } else if (strcmp(output_name_item->valuestring, "set_light_power") == 0) {
+    ESP_LOGI(LOG_TAG, "set_light_power on(%d) duration(%d)", on, duration);
+    send_lifx_set_power(on, duration);
   }
 
   cJSON_Delete(args);
