@@ -5,7 +5,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
-#define BROADCAST_IP "192.168.4.255"
+#define BROADCAST_IP "255.255.255.255"
 #define LIFX_PORT 56700
 
 #pragma pack(push, 1)
@@ -162,6 +162,6 @@ void reflect_lifx() {
     return;
   }
 
-  send_lifx_set_power(false);
   inet_pton(AF_INET, BROADCAST_IP, &lifx_addr.sin_addr);
+  send_lifx_set_power(false);
 }
