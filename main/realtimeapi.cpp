@@ -69,9 +69,9 @@ void set_required_parameters(cJSON *parameters,
   }
 }
 
-void add_duration_parameter(cJSON *properties, std::string name,
-                            std::string description, int defaultValue,
-                            int minimum, int maximum) {
+void add_number_parameter(cJSON *properties, std::string name,
+                          std::string description, int defaultValue,
+                          int minimum, int maximum) {
   cJSON *duration = cJSON_AddObjectToObject(properties, name.c_str());
   assert(duration != nullptr);
 
@@ -109,8 +109,8 @@ void add_set_light_power(cJSON *tools) {
   assert(cJSON_AddStringToObject(on, "description", "true=on, false=off") !=
          nullptr);
 
-  add_duration_parameter(properties, "duration",
-                         "duration of transition in milliseconds", 0, 0, 1000);
+  add_number_parameter(properties, "duration",
+                       "duration of transition in milliseconds", 0, 0, 1000);
 
   set_required_parameters(parameters,
                           std::vector<std::string>{"on", "duration"});
@@ -136,11 +136,11 @@ void add_set_color(cJSON *tools) {
   auto properties = cJSON_AddObjectToObject(parameters, "properties");
   assert(properties != nullptr);
 
-  add_duration_parameter(properties, "hue", "", 0, 0, 65535);
-  add_duration_parameter(properties, "saturation", "", 0, 0, 65535);
-  add_duration_parameter(properties, "brightness", "", 0, 0, 65535);
-  add_duration_parameter(properties, "kelvin", "", 0, 0, 65535);
-  add_duration_parameter(properties, "duration", "", 0, 0, 4294967295);
+  add_number_parameter(properties, "hue", "", 0, 0, 65535);
+  add_number_parameter(properties, "saturation", "", 0, 0, 65535);
+  add_number_parameter(properties, "brightness", "", 0, 0, 65535);
+  add_number_parameter(properties, "kelvin", "", 0, 0, 65535);
+  add_number_parameter(properties, "duration", "", 0, 0, 4294967295);
 
   set_required_parameters(
       parameters, std::vector<std::string>{"hue", "saturation", "brightness",
@@ -175,5 +175,47 @@ void send_session_update(PeerConnection *peer_connection) {
   peer_connection_datachannel_send(peer_connection, serialized,
                                    strlen(serialized));
   cJSON_free(serialized);
+  cJSON_Delete(root);
+}
+
+void realtimeapi_parse_incoming(char *msg) {
+  auto root = cJSON_Parse(msg);
+  assert(root != NULL);
+
+  auto type_item = cJSON_GetObjectItem(root, "type");
+  assert(cJSON_IsString(type_item));
+  auto type = type_item->valuestring;
+
+  if (strcmp(type, "response.output") == 0) {
+    return;
+  }
+
+  auto output = cJSON_GetObjectItem(root, "output");
+  assert(cJSON_IsObject(output));
+
+  auto output_type_item = cJSON_GetObjectItem(output, "type");
+  assert(cJSON_IsString(output_type_item));
+  auto output_type = output_type_item->valuestring;
+  if (strcmp(output_type, "function_call") == 0) {
+    return;
+  }
+
+  auto output_name_item = cJSON_GetObjectItem(output, "name");
+  assert(cJSON_IsString(output_name_item));
+  auto output_name = output_name_item->valuestring;
+
+  auto args = cJSON_GetObjectItem(output, "arguments");
+  assert(cJSON_IsObject(args));
+
+  auto hue = cJSON_GetObjectItem(args, "hue")->valueint;
+  auto saturation = cJSON_GetObjectItem(args, "saturation")->valueint;
+  auto brightness = cJSON_GetObjectItem(args, "brightness")->valueint;
+  auto kelvin = cJSON_GetObjectItem(args, "kelvin")->valueint;
+  auto duration = cJSON_GetObjectItem(args, "duration")->valueint;
+
+  if (strcmp(output_name, "lifx_lan.set_color") == 0) {
+    send_lifx_set_color(hue, saturation, brightness, kelvin, duration);
+  }
+
   cJSON_Delete(root);
 }
