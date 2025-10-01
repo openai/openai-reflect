@@ -54,46 +54,31 @@ User: “One gentle sign flicker, then hold.”
 → Status: `PULSE · 1×` / `STEADY`
 )";
 
+void add_set_light_power(cJSON* tools) {
+}
 
 
 void send_session_update(PeerConnection *peer_connection) {
     auto root = cJSON_CreateObject();
-    if (!root) {
-      ESP_LOGI(LOG_TAG, "Failed to create root for session.update");
-      return;
-    }
+    assert(root != nullptr);
 
-    if (!cJSON_AddStringToObject(root, "type", "session.update")) {
-      ESP_LOGI(LOG_TAG, "Failed to set type for session.update");
-      return;
-    }
+    assert(cJSON_AddStringToObject(root, "type", "session.update") != nullptr);
 
     auto session = cJSON_CreateObject();
-    if (!session) {
-      ESP_LOGI(LOG_TAG, "Failed to create session object for session.update");
-      return;
-    }
+    assert(session != nullptr);
 
-    if (!cJSON_AddStringToObject(session, "instructions", kLunaInstructions)) {
-      ESP_LOGI(LOG_TAG, "Failed to set 'instructions' on session object");
-      return;
-    }
+    assert(cJSON_AddStringToObject(session, "instructions", kLunaInstructions) != nullptr);
+    assert(cJSON_AddStringToObject(session, "type", "realtime") != nullptr);
 
-    if (!cJSON_AddStringToObject(session, "type", "realtime")) {
-      ESP_LOGI(LOG_TAG, "Failed to set 'type' on session object");
-      return;
-    }
+    auto tools = cJSON_AddArrayToObject(session, "tools");
+    assert(tools != nullptr);
 
-    if (!cJSON_AddItemToObject(root, "session", session)) {
-      ESP_LOGI(LOG_TAG, "Failed to add session to root object");
-      return;
-    }
+    add_set_light_power(tools);
+
+    assert(cJSON_AddItemToObject(root, "session", session) != nullptr);
 
     auto serialized = cJSON_PrintUnformatted(root);
-    if (!serialized) {
-      ESP_LOGI(LOG_TAG, "Failed to generate serialized session.update");
-      return;
-    }
+    assert(serialized != nullptr);
 
     peer_connection_datachannel_send(peer_connection, serialized, strlen(serialized));
     cJSON_free(serialized);
