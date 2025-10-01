@@ -54,7 +54,44 @@ User: “One gentle sign flicker, then hold.”
 → Status: `PULSE · 1×` / `STEADY`
 )";
 
-void add_set_light_power(cJSON *tools) {}
+void add_set_light_power(cJSON *tools) {
+  cJSON* tool = cJSON_CreateObject();
+  assert(tool != nullptr);
+
+  assert(cJSON_AddStringToObject(tool, "type", "function") != nullptr);
+  assert(cJSON_AddStringToObject(tool, "name", "lifx_lan.set_light_power") != nullptr);
+  assert(cJSON_AddStringToObject(tool, "description", "LAN SetLightPower (117). Turn on/off with optional fade.") != nullptr);
+
+  cJSON* parameters = cJSON_CreateObject();
+  assert(parameters != nullptr);
+  assert(cJSON_AddItemToObject(tool, "parameters", parameters));
+
+  assert(cJSON_AddStringToObject(parameters, "type", "object") != nullptr);
+
+  cJSON* properties = cJSON_AddObjectToObject(parameters, "properties");
+  assert(properties != nullptr);
+
+  cJSON* on = cJSON_AddObjectToObject(properties, "on");
+  assert(on != nullptr);
+  assert(cJSON_AddStringToObject(on, "type", "boolean") != nullptr);
+  assert(cJSON_AddStringToObject(on, "description", "true=on, false=off") != nullptr);
+
+  cJSON* duration = cJSON_AddObjectToObject(properties, "duration");
+  assert(duration != nullptr);
+  assert(cJSON_AddStringToObject(duration, "type", "integer") != nullptr);
+  assert(cJSON_AddNumberToObject(duration, "minimum", 0) != nullptr);
+  assert(cJSON_AddNumberToObject(duration, "default", 1000) != nullptr);
+
+  cJSON* required = cJSON_AddArrayToObject(parameters, "required");
+  assert(required != nullptr);
+  cJSON* r_on = cJSON_CreateString("on");
+  cJSON* r_duration = cJSON_CreateString("duration");
+  assert(r_on != nullptr && r_duration != nullptr);
+  assert(cJSON_AddItemToArray(required, r_on));
+  assert(cJSON_AddItemToArray(required, r_duration));
+
+  assert(cJSON_AddItemToArray(tools, tool));
+}
 
 void send_session_update(PeerConnection *peer_connection) {
   auto root = cJSON_CreateObject();
