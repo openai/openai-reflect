@@ -184,7 +184,9 @@ void realtimeapi_parse_incoming(char *msg) {
   }
 
   auto type_item = cJSON_GetObjectItem(root, "type");
-  assert(cJSON_IsString(type_item));
+  if (type_item == nullptr) {
+    return;
+  }
 
   if (strcmp(type_item->valuestring, "response.function_call_arguments.done") !=
       0) {
