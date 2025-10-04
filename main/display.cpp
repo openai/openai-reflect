@@ -196,19 +196,20 @@ uint8_t mic_map[] = {
 // clang-format on
 
 const lv_image_dsc_t mic = {
-  .header = {
-    .magic = LV_IMAGE_HEADER_MAGIC,
-    .cf = LV_COLOR_FORMAT_A1,
-    .flags = 0,
-    .w = 40,
-    .h = 40,
-    .stride = 5,
-    .reserved_2 = 0,
-  },
-  .data_size = sizeof(mic_map),
-  .data = mic_map,
-  .reserved = NULL,
-  .reserved_2 = NULL,
+    .header =
+        {
+            .magic = LV_IMAGE_HEADER_MAGIC,
+            .cf = LV_COLOR_FORMAT_A1,
+            .flags = 0,
+            .w = 40,
+            .h = 40,
+            .stride = 5,
+            .reserved_2 = 0,
+        },
+    .data_size = sizeof(mic_map),
+    .data = mic_map,
+    .reserved = NULL,
+    .reserved_2 = NULL,
 };
 
 static lv_obj_t *spinning_img;
@@ -216,80 +217,77 @@ static lv_obj_t *mic_img;
 
 static bool should_spin = false;
 
-static void spinner_set_angle(void *obj, int32_t v)
-{
-    if (should_spin) {
-        lv_image_set_rotation((lv_obj_t *)obj, v);
-    }
+static void spinner_set_angle(void *obj, int32_t v) {
+  if (should_spin) {
+    lv_image_set_rotation((lv_obj_t *)obj, v);
+  }
 }
 
 esp_lcd_touch_handle_t tp = NULL;
 
-void reflect_display(void)
-{
-    bsp_display_start();
-    bsp_display_backlight_on();
+void reflect_display(void) {
+  bsp_display_start();
+  bsp_display_backlight_on();
 
-    bsp_display_lock(0);
-    auto scr = lv_screen_active();
+  bsp_display_lock(0);
+  auto scr = lv_screen_active();
 
-    lv_obj_set_style_bg_color(scr, lv_color_black(), LV_PART_MAIN);
-    lv_obj_set_style_bg_opa(scr, LV_OPA_COVER, LV_PART_MAIN);
+  lv_obj_set_style_bg_color(scr, lv_color_black(), LV_PART_MAIN);
+  lv_obj_set_style_bg_opa(scr, LV_OPA_COVER, LV_PART_MAIN);
 
-    spinning_img = lv_image_create(scr);
-    lv_image_set_src(spinning_img, &oai);
-    lv_obj_center(spinning_img);
+  spinning_img = lv_image_create(scr);
+  lv_image_set_src(spinning_img, &oai);
+  lv_obj_center(spinning_img);
 
-    lv_image_set_pivot(spinning_img, oai.header.w / 2, oai.header.h / 2);
+  lv_image_set_pivot(spinning_img, oai.header.w / 2, oai.header.h / 2);
 
-    lv_image_set_antialias(spinning_img, true);
+  lv_image_set_antialias(spinning_img, true);
 
-    lv_anim_t a;
-    lv_anim_init(&a);
-    lv_anim_set_var(&a, spinning_img);
-    lv_anim_set_exec_cb(&a, spinner_set_angle);
-    lv_anim_set_duration(&a, 5000);
-    lv_anim_set_values(&a, 0, 3600);
-    lv_anim_set_repeat_count(&a, LV_ANIM_REPEAT_INFINITE);
-    lv_anim_start(&a);
+  lv_anim_t a;
+  lv_anim_init(&a);
+  lv_anim_set_var(&a, spinning_img);
+  lv_anim_set_exec_cb(&a, spinner_set_angle);
+  lv_anim_set_duration(&a, 5000);
+  lv_anim_set_values(&a, 0, 3600);
+  lv_anim_set_repeat_count(&a, LV_ANIM_REPEAT_INFINITE);
+  lv_anim_start(&a);
 
-    mic_img = lv_img_create(scr);
-    lv_img_set_src(mic_img, &mic);
+  mic_img = lv_img_create(scr);
+  lv_img_set_src(mic_img, &mic);
 
-    int inset = 4;
-    lv_obj_align(mic_img, LV_ALIGN_TOP_RIGHT, -inset, inset);
-    lv_obj_move_foreground(mic_img);
+  int inset = 4;
+  lv_obj_align(mic_img, LV_ALIGN_TOP_RIGHT, -inset, inset);
+  lv_obj_move_foreground(mic_img);
 
-    lv_obj_set_style_img_recolor_opa(mic_img, LV_OPA_COVER, LV_PART_MAIN);
-    reflect_set_mic_color(false);
+  lv_obj_set_style_img_recolor_opa(mic_img, LV_OPA_COVER, LV_PART_MAIN);
+  reflect_set_mic_color(false);
 
-    ESP_ERROR_CHECK(bsp_touch_new(NULL, &tp));
+  ESP_ERROR_CHECK(bsp_touch_new(NULL, &tp));
 
-    bsp_display_unlock();
+  bsp_display_unlock();
 }
 
 bool reflect_display_pressed(void) {
-    uint16_t touch_x[1];
-    uint16_t touch_y[1];
-    uint16_t touch_strength[1];
-    uint8_t touch_cnt = 0;
+  uint16_t touch_x[1];
+  uint16_t touch_y[1];
+  uint16_t touch_strength[1];
+  uint8_t touch_cnt = 0;
 
-    esp_lcd_touch_read_data(tp);
-    return esp_lcd_touch_get_coordinates(tp, touch_x, touch_y, touch_strength, &touch_cnt, 1);
+  esp_lcd_touch_read_data(tp);
+  return esp_lcd_touch_get_coordinates(tp, touch_x, touch_y, touch_strength,
+                                       &touch_cnt, 1);
 }
 
-void reflect_set_spin(bool s) {
-    should_spin = s;
-}
+void reflect_set_spin(bool s) { should_spin = s; }
 
 void reflect_set_mic_color(bool muted) {
-    bsp_display_lock(0);
+  bsp_display_lock(0);
 
-    if (muted) {
-        lv_obj_set_style_img_recolor(mic_img, lv_color_hex(0xFF0000), LV_PART_MAIN);
-    } else {
-        lv_obj_set_style_img_recolor(mic_img, lv_color_hex(0xFFFFFF), LV_PART_MAIN);
-    }
+  if (muted) {
+    lv_obj_set_style_img_recolor(mic_img, lv_color_hex(0xFF0000), LV_PART_MAIN);
+  } else {
+    lv_obj_set_style_img_recolor(mic_img, lv_color_hex(0xFFFFFF), LV_PART_MAIN);
+  }
 
-    bsp_display_unlock();
+  bsp_display_unlock();
 }
