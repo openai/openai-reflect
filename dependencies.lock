@@ -140,7 +140,7 @@ dependencies:
   idf:
     source:
       type: idf
-    version: 5.5.1
+    version: 5.5.0
   lvgl/lvgl:
     component_hash: b702d642e03e95928046d5c6726558e6444e112420c77efa5fdb6650b0a13c5d
     dependencies: []
