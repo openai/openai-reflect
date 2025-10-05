@@ -101,10 +101,6 @@ void reflect_play_audio(uint8_t *data, size_t size) {
   auto decoded_size = opus_decode(opus_decoder, data, size, decoder_buffer,
                                   PCM_BUFFER_SIZE / sizeof(uint16_t), 0);
 
-  if (reflect_display_pressed()) {
-    memset(decoder_buffer, 0, PCM_BUFFER_SIZE);
-  }
-
   if (decoded_size > 0) {
     set_is_playing(decoder_buffer);
     apply_gain((int16_t *)decoder_buffer);
@@ -112,8 +108,8 @@ void reflect_play_audio(uint8_t *data, size_t size) {
   }
 }
 
-void reflect_send_audio(PeerConnection *peer_connection) {
-  if (is_playing) {
+void reflect_send_audio(PeerConnection *peer_connection, bool is_muted) {
+  if (is_playing || is_muted) {
     memset(read_buffer, 0, PCM_BUFFER_SIZE);
   } else {
     ESP_ERROR_CHECK(

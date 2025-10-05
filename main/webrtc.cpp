@@ -28,9 +28,16 @@ static void on_datachannel_onopen(void *userdata) {
 StaticTask_t send_audio_task_buffer;
 void reflect_send_audio_task(void *user_data) {
   auto peer_connection = (PeerConnection *)user_data;
+  bool is_muted = false;
+
   while (1) {
+    if (reflect_display_pressed()) {
+      is_muted = !is_muted;
+      reflect_set_mic_color(is_muted);
+    }
+
     int64_t start_us = esp_timer_get_time();
-    reflect_send_audio(peer_connection);
+    reflect_send_audio(peer_connection, is_muted);
 
     int64_t elapsed_us = esp_timer_get_time() - start_us;
     int64_t ms_sleep = TICK_INTERVAL - (elapsed_us / 1000);

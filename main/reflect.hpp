@@ -6,12 +6,13 @@
 #define SDP_BUFFER_SIZE 4096
 
 bool reflect_display_pressed(void);
+void reflect_set_mic_color(bool);
 void reflect_audio();
 void reflect_display();
 void reflect_lifx();
 void reflect_peer_connection_loop();
 void reflect_play_audio(uint8_t *, size_t);
-void reflect_send_audio(PeerConnection *);
+void reflect_send_audio(PeerConnection *, bool);
 void reflect_set_spin(bool);
 void reflect_wifi();
 
